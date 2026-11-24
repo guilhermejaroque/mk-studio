@@ -25,6 +25,7 @@ const EXEC_NAO_FEITO = 'não feito';
 const STATUS_CANCELADO = 'cancelado';
 const STATUS_CONFIRMADO = 'confirmado';
 const MOTIVO_FOLGA = 'Folga (app)';
+const FORMAS_PAGAMENTO = ['pix', 'credito', 'debito'];
 
 /* ------------------------------------------------------------------ */
 
@@ -82,6 +83,7 @@ function dados_(prof) {
       telefone: String(r[ag.col.Telefone] || ''),
       obs: String(r[ag.col['Observação']] || ''),
       execucao: exec === EXEC_FEITO ? 'feito' : exec === EXEC_NAO_FEITO ? 'nao_feito' : '',
+      pagamento: String(r[ag.col.Pagamento] || ''),
       valorCheio: valorCheio,
       ganho: arred_(valorCheio * COMISSAO)
     });
@@ -130,13 +132,17 @@ function marcar_(prof, req) {
     if (execAtual === EXEC_NAO_FEITO && !horarioLivre_(ag, prof, data, hora, idx)) {
       return { ok: false, erro: 'Esse horário já foi agendado por outra cliente pelo site.' };
     }
+    const pagamento = String(req.pagamento || '').trim().toLowerCase();
+    if (FORMAS_PAGAMENTO.indexOf(pagamento) < 0) return { ok: false, erro: 'Escolha Pix, Crédito ou Débito.' };
     const valor = numero_(req.valorCheio);
     set('Execução', EXEC_FEITO);
+    set('Pagamento', pagamento);
     if (valor != null) set('Valor', valor);
     if (execAtual === EXEC_NAO_FEITO) set('Status', STATUS_CONFIRMADO);
   } else if (req.execucao === 'nao_feito') {
     set('Execução', EXEC_NAO_FEITO);
     set('Valor', '');
+    set('Pagamento', '');
     set('Status', STATUS_CANCELADO);           // libera o horário no site
   } else {                                     // desfazer
     if (execAtual === EXEC_NAO_FEITO && !horarioLivre_(ag, prof, data, hora, idx)) {
@@ -144,6 +150,7 @@ function marcar_(prof, req) {
     }
     set('Execução', '');
     set('Valor', '');
+    set('Pagamento', '');
     if (execAtual === EXEC_NAO_FEITO) set('Status', STATUS_CONFIRMADO);
   }
   SpreadsheetApp.flush();
@@ -186,7 +193,7 @@ function planilha_() { return SpreadsheetApp.openById(PLANILHA_ID); }
 function abaAgenda_() {
   const sh = planilha_().getSheetByName('Agenda');
   let cab = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(c => String(c).trim());
-  ['Execução', 'Valor'].forEach(nome => {      // cria as colunas novas se faltarem
+  ['Execução', 'Valor', 'Pagamento'].forEach(nome => {      // cria as colunas novas se faltarem
     if (cab.indexOf(nome) < 0) {
       sh.getRange(1, cab.length + 1).setValue(nome);
       cab.push(nome);

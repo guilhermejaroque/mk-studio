@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MK Studio · Minha agenda</title>
-<!-- versão 1.0 -->
+<!-- versão 1.1 -->
 <meta name="theme-color" content="#19130f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -133,6 +133,10 @@
   .sheet .you{font-size:16px;margin:8px 0 18px}
   .sheet .you b{color:var(--ok);font-size:20px}
   .sheet .btns{display:flex;gap:10px}
+  .sheet .pays{display:flex;gap:8px;margin:8px 0 18px}
+  .sheet .pays .pay{flex:1;padding:14px 0;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);color:var(--cacao);font-weight:600;font-size:16px}
+  .sheet .pays .pay.sel{background:var(--cacao);border-color:var(--cacao);color:#fff}
+  .sheet .btns button:disabled{opacity:.45}
   .sheet .btns button{flex:1;padding:15px;border-radius:14px;font-weight:600;font-size:16px}
   .b-ghost{background:var(--sand);color:var(--cacao)}
   .b-dark{background:var(--ink);color:#fff}
@@ -196,6 +200,7 @@ const API_URL = 'https://script.google.com/macros/s/AKfycbwFxURRUtcd7qOTbkl6zv1o
 
 const DEMO = !/^https:\/\/script\.google\.com\//.test(API_URL);
 const LS_KEY = 'mk-app-codigo';
+const FORMAS = [['pix', 'Pix'], ['credito', 'Crédito'], ['debito', 'Débito']];
 const DIAS_SEM = ['dom','seg','ter','qua','qui','sex','sáb'];
 const DIAS_SEM_LONGO = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 const MESES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
@@ -429,13 +434,21 @@ function abrirFeito(a) {
     <label style="font-size:14px;color:var(--soft)">Valor cobrado da cliente</label>
     <div class="field"><span>R$</span><input id="valorCheio" inputmode="decimal" value="${reais(a.valorCheio)}"></div>
     <div class="you">Você recebe (${pct}%): <b id="vcRecebe">R$ ${reais(a.ganho)}</b></div>
-    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-dark" id="okFeito">Confirmar</button></div>`);
+    <label style="font-size:14px;color:var(--soft)">Como a cliente pagou?</label>
+    <div class="pays">${FORMAS.map(f => `<button class="pay${a.pagamento === f[0] ? ' sel' : ''}" data-pay="${f[0]}">${f[1]}</button>`).join('')}</div>
+    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-dark" id="okFeito"${a.pagamento ? '' : ' disabled'}>Confirmar</button></div>`);
+  let pagamento = a.pagamento || '';
+  document.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => {
+    pagamento = b.dataset.pay;
+    document.querySelectorAll('[data-pay]').forEach(x => x.classList.toggle('sel', x === b));
+    $('#okFeito').disabled = false;
+  });
   const inp = $('#valorCheio');
   const ler = () => Number(String(inp.value).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
   inp.oninput = () => { $('#vcRecebe').textContent = 'R$ ' + reais(ler() * dados.comissao); };
   $('#okFeito').onclick = async ev => {
     ev.target.disabled = true; ev.target.textContent = 'Salvando…';
-    const ok = await enviar('marcar', { linha: a.linha, id: a.id, execucao: 'feito', valorCheio: ler() },
+    const ok = await enviar('marcar', { linha: a.linha, id: a.id, execucao: 'feito', valorCheio: ler(), pagamento },
       dif => { if (dif > 0) toast('+ R$ ' + reais(dif)); });
     if (ok) fecharFolha(); else { ev.target.disabled = false; ev.target.textContent = 'Confirmar'; }
   };
@@ -521,6 +534,7 @@ function demoResp(acao, x) {
     const a = demo.at.find(a => a.linha === x.linha);
     a.execucao = x.execucao;
     if (x.execucao === 'feito' && x.valorCheio != null) a.valorCheio = x.valorCheio;
+    a.pagamento = x.execucao === 'feito' ? x.pagamento : '';
   }
   if (acao === 'folga') {
     demo.folgas = demo.folgas.filter(f => f.data !== x.data);
