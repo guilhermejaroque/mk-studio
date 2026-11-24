@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MK Studio · Minha agenda</title>
-<!-- versão 1.1 -->
+<!-- versão 1.2 -->
 <meta name="theme-color" content="#19130f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -81,6 +81,25 @@
   .day.off{opacity:.55}
 
   main{padding:6px 16px 40px}
+  /* ---------- estoque ---------- */
+  .est-top{display:flex;align-items:center;justify-content:space-between;margin:14px 2px 12px}
+  .est-top h2{margin:0;font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;font-weight:600}
+  .voltar{padding:10px 14px;border-radius:12px;background:var(--sand);color:var(--cacao);font-weight:600;font-size:15px}
+  .comprar{background:var(--warn-bg);color:var(--warn);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;font-size:15px}
+  .comprar b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+  .comprar.vazio{background:var(--ok-bg);color:var(--ok)}
+  .est{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .est .nm{flex:1;cursor:pointer}
+  .est .nm div{font-weight:500}
+  .est .nm span{font-size:13.5px;color:var(--soft)}
+  .card.low{border-color:#e9cf9a}
+  .qty{display:flex;align-items:center;gap:8px}
+  .qty button{width:46px;height:46px;border-radius:14px;background:var(--sand);color:var(--cacao);font-size:24px;line-height:1}
+  .qty .n{min-width:30px;text-align:center;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+  .add-item{display:block;width:100%;padding:15px;border-radius:14px;border:1.5px dashed #cbbfb2;color:var(--cacao);font-weight:600;margin-top:4px}
+  .sheet label.l{display:block;font-size:14px;color:var(--soft);margin-top:10px}
+  .sheet .field.txt input{font-size:18px}
+  .sheet .erro{color:var(--no);font-size:14px;min-height:18px}
   .dayhead{display:flex;align-items:baseline;justify-content:space-between;margin:12px 4px 10px}
   .dayhead h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:26px;margin:0}
   .dayhead span{font-size:14px;color:var(--soft)}
@@ -171,6 +190,9 @@
     <div class="topline">
       <div class="hello">Olá, <b id="nome">—</b></div>
       <div style="display:flex;gap:8px">
+        <button class="icon-btn" id="btnEstoque" aria-label="Estoque">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+        </button>
         <button class="icon-btn" id="btnAtualizar" aria-label="Atualizar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         </button>
@@ -188,6 +210,7 @@
 
   <nav class="days" id="dias"></nav>
   <main id="lista"></main>
+  <main id="estoque" class="hidden"></main>
 </section>
 
 <div id="overlay"></div>
@@ -295,6 +318,84 @@ function aplicar(r, animar) {
   atualizarGanhos(animar);
   desenharDias();
   desenharLista();
+}
+
+/* ---------------- estoque ---------------- */
+let estoque = [];
+let filaEstoque = Promise.resolve();
+$('#btnEstoque').addEventListener('click', () => abrirEstoque());
+
+async function abrirEstoque() {
+  $('#dias').classList.add('hidden'); $('#lista').classList.add('hidden'); $('#estoque').classList.remove('hidden');
+  window.scrollTo(0, 0);
+  if (!estoque.length) $('#estoque').innerHTML = '<div class="empty">Carregando…</div>';
+  const r = await api('estoque');
+  if (!r.ok) { toast(r.erro || 'Erro ao carregar o estoque.', true); return; }
+  estoque = r.estoque; desenharEstoque();
+}
+function fecharEstoque() {
+  $('#estoque').classList.add('hidden'); $('#dias').classList.remove('hidden'); $('#lista').classList.remove('hidden');
+}
+
+function desenharEstoque() {
+  const baixos = estoque.filter(i => i.quantidade <= i.minimo);
+  let h = `<div class="est-top"><h2>Estoque</h2><button class="voltar" id="voltarAgenda">← Agenda</button></div>`;
+  h += baixos.length
+    ? `<div class="comprar"><b>Comprar</b>${baixos.map(i => `<div>• ${esc(i.item)} (${i.quantidade} de mínimo ${i.minimo})</div>`).join('')}</div>`
+    : `<div class="comprar vazio"><b>Comprar</b>Nada para comprar agora.</div>`;
+  if (!estoque.length) h += `<div class="empty">Nenhum material cadastrado ainda.</div>`;
+  estoque.forEach(i => {
+    h += `<div class="card est${i.quantidade <= i.minimo ? ' low' : ''}"><div class="nm" data-item="${esc(i.id)}"><div>${esc(i.item)}</div>
+      <span>mínimo ${i.minimo} ${esc(i.unidade)} · tocar para editar</span></div>
+      <div class="qty"><button data-menos="${esc(i.id)}" aria-label="Tirar um">−</button><span class="n">${i.quantidade}</span><button data-mais="${esc(i.id)}" aria-label="Pôr um">+</button></div></div>`;
+  });
+  h += `<button class="add-item" id="novoItem">+ item</button>`;
+  $('#estoque').innerHTML = h;
+  $('#voltarAgenda').onclick = fecharEstoque;
+  $('#novoItem').onclick = () => abrirItem(null);
+  document.querySelectorAll('#estoque [data-item]').forEach(el => el.onclick = () => abrirItem(estoque.find(i => i.id === el.dataset.item)));
+  document.querySelectorAll('#estoque [data-mais],#estoque [data-menos]').forEach(el =>
+    el.onclick = () => ajustarEstoque(el.dataset.mais || el.dataset.menos, el.dataset.mais ? 1 : -1));
+}
+
+function ajustarEstoque(id, delta) {
+  const it = estoque.find(i => i.id === id);
+  if (!it || (delta < 0 && it.quantidade <= 0)) return;
+  it.quantidade += delta;                      // mostra na hora; o servidor confirma depois
+  desenharEstoque();
+  filaEstoque = filaEstoque.then(async () => {
+    const r = await api('ajusteEstoque', { id, delta });
+    if (!r.ok) { toast(r.erro || 'Não foi possível salvar.', true); abrirEstoque(); return; }
+    estoque = r.estoque; desenharEstoque();
+  });
+}
+
+function abrirItem(i) {
+  abrirFolha(`<h3>${i ? 'Editar material' : 'Novo material'}</h3>
+    <label class="l">Material</label><div class="field txt"><input id="eNome" placeholder="Ex.: acetona" value="${i ? esc(i.item) : ''}"></div><div class="erro" id="eErro"></div>
+    <label class="l">Unidade</label><div class="field txt"><input id="eUni" placeholder="Ex.: frascos, pacotes" value="${i ? esc(i.unidade) : ''}"></div>
+    <div style="display:flex;gap:10px"><div style="flex:1"><label class="l">Quantidade agora</label><div class="field txt"><input id="eQtd" inputmode="numeric" placeholder="0" value="${i ? i.quantidade : ''}"></div></div>
+    <div style="flex:1"><label class="l">Avisar quando chegar a</label><div class="field txt"><input id="eMin" inputmode="numeric" placeholder="0" value="${i ? i.minimo : ''}"></div></div></div>
+    <div class="btns" style="margin-top:16px">${i ? '<button class="b-red" id="eApagar">Apagar</button>' : '<button class="b-ghost" data-x>Cancelar</button>'}<button class="b-dark" id="eOk">Salvar</button></div>`);
+  $('#eOk').onclick = async ev => {
+    const nome = $('#eNome').value.trim();
+    if (!nome) { $('#eErro').textContent = 'Escreva o nome do material.'; return; }
+    ev.target.disabled = true; ev.target.textContent = 'Salvando…';
+    const r = await api('salvarItem', { item: { id: i ? i.id : undefined, item: nome, unidade: $('#eUni').value.trim(),
+      quantidade: Math.max(0, parseInt($('#eQtd').value, 10) || 0), minimo: Math.max(0, parseInt($('#eMin').value, 10) || 0) } });
+    if (!r.ok) { toast(r.erro || 'Não foi possível salvar.', true); ev.target.disabled = false; ev.target.textContent = 'Salvar'; return; }
+    estoque = r.estoque; desenharEstoque(); fecharFolha(); toast('Material salvo');
+  };
+  if (i) $('#eApagar').onclick = () => {
+    abrirFolha(`<h3>Apagar material?</h3><p>${esc(i.item)} sai da lista do estoque.</p>
+      <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-red" id="eConf">Apagar</button></div>`);
+    $('#eConf').onclick = async ev => {
+      ev.target.disabled = true;
+      const r = await api('apagarItem', { id: i.id });
+      if (!r.ok) { toast(r.erro || 'Não foi possível apagar.', true); ev.target.disabled = false; return; }
+      estoque = r.estoque; desenharEstoque(); fecharFolha(); toast('Material apagado');
+    };
+  };
 }
 
 /* ---------------- ganhos (contador) ---------------- */
@@ -524,12 +625,26 @@ let demo = null;
 function demoApi(acao, x) {
   return new Promise(res => setTimeout(() => res(demoResp(acao, x)), 350));
 }
+function demoEstoque(acao, x) {
+  if (!demo.est) demo.est = [['e1', 'Acetona', 'frascos', 2, 2], ['e2', 'Algodão', 'pacotes', 6, 2], ['e3', 'Lixas', 'unidades', 40, 15]]
+    .map(([id, item, unidade, quantidade, minimo]) => ({ id, item, unidade, quantidade, minimo }));
+  if (acao === 'salvarItem') {
+    if (!String(x.item.item || '').trim()) return { ok: false, erro: 'Digite o nome do material.' };
+    const a = demo.est.find(i => i.id === x.item.id);
+    if (a) Object.assign(a, x.item); else demo.est.push({ ...x.item, id: 'e' + Date.now() });
+  }
+  if (acao === 'ajusteEstoque') { const a = demo.est.find(i => i.id === x.id); if (a) a.quantidade = Math.max(0, a.quantidade + x.delta); }
+  if (acao === 'apagarItem') demo.est = demo.est.filter(i => i.id !== x.id);
+  const lista = demo.est.map(i => ({ ...i })).sort((a, b) => ((b.quantidade <= b.minimo) - (a.quantidade <= a.minimo)) || a.item.localeCompare(b.item));
+  return { ok: true, estoque: lista };
+}
 function demoResp(acao, x) {
   const contas = { KatiaMK: { id: 'katia', nome: 'Katia' }, SueniaMK: { id: 'suenia', nome: 'Suênia' } };
   const prof = contas[codigo];
   if (!prof) return { ok: false, erro: 'Código de acesso inválido.' };
   if (acao === 'login') return { ok: true, profissional: prof };
   if (!demo) demo = demoInicial();
+  if (['estoque', 'salvarItem', 'ajusteEstoque', 'apagarItem'].includes(acao)) return demoEstoque(acao, x);
   if (acao === 'marcar') {
     const a = demo.at.find(a => a.linha === x.linha);
     a.execucao = x.execucao;
