@@ -12,7 +12,7 @@ function novo() {
     'Serviços': [['Serviço', 'Preço', 'Por unidade'], ['Manicure', 40, 'não']],
     Bloqueios: [['Data', 'Profissional', 'Horário', 'Motivo']],
     'Horários': [['terca', 'sim']]
-  }, { hoje: '2026-11-25' });
+  }, { hoje: '2026-11-25', props: { CODIGO_katia: 'KatiaMK', CODIGO_suenia: 'SueniaMK' } });
   const fns = carregar(['mk-agenda-app/Codigo.gs'], g);
   const ag = g._planilha.abas.Agenda;
   const col = n => ag.linhas[0].indexOf(n);
@@ -60,7 +60,7 @@ function comEstoque(linhasEstoque) {
     'Serviços': [['Serviço', 'Preço', 'Por unidade']], Bloqueios: [['Data', 'Profissional', 'Horário', 'Motivo']], 'Horários': [['terca', 'sim']]
   };
   if (linhasEstoque) abas.Estoque = linhasEstoque;
-  const g = fake(abas, { hoje: '2026-11-25' });
+  const g = fake(abas, { hoje: '2026-11-25', props: { CODIGO_katia: 'KatiaMK', CODIGO_suenia: 'SueniaMK' } });
   const fns = carregar(['mk-agenda-app/Codigo.gs'], g);
   return { g, p: (acao, extra = {}) => post(fns, { codigo: 'SueniaMK', acao, ...extra }) };
 }
@@ -86,4 +86,15 @@ test('estoque: cadastrar, tirar até zero (fica primeiro), apagar e nome vazio',
   r = p('apagarItem', { id });
   assert.deepEqual(JSON.parse(JSON.stringify(r.estoque.map(i => i.item))), ['Algodão']);
   assert.equal(p('salvarItem', { item: { item: '  ' } }).ok, false);
+});
+
+test('códigos das manicures vêm das propriedades do script', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'mk-agenda-app', 'Codigo.gs'), 'utf8');
+  assert.ok(!/KatiaMK|SueniaMK/.test(src));
+  const g = fake({ Profissionais: [['ID', 'Nome'], ['katia', 'Katia']] }, { hoje: '2026-11-25', props: { CODIGO_katia: 'K-nova' } });
+  const fns = carregar(['mk-agenda-app/Codigo.gs'], g);
+  assert.equal(post(fns, { codigo: 'KatiaMK', acao: 'login' }).ok, false);
+  const r = post(fns, { codigo: 'K-nova', acao: 'login' });
+  assert.deepEqual([r.ok, r.profissional.id, r.profissional.nome], [true, 'katia', 'Katia']);
+  assert.equal(post(fns, { codigo: '', acao: 'login' }).ok, false);
 });

@@ -13,11 +13,11 @@ const FUSO = 'America/Sao_Paulo';
 const COMISSAO = 0.5;          // parte da profissional (50%)
 const DIAS_A_FRENTE = 30;      // até quantos dias à frente a agenda aparece
 
-// Código de acesso -> id da profissional (coluna "ID" da aba Profissionais)
-const CODIGOS = {
-  'KatiaMK': 'katia',
-  'SueniaMK': 'suenia'
-};
+// Códigos de acesso: ficam nas PROPRIEDADES DO SCRIPT, não aqui (o repositório é público).
+//   ⚙︎ Configurações do projeto > Propriedades do script > Adicionar propriedade
+//   Propriedade: CODIGO_<id da profissional>   Valor: o código dela
+//   Ex.: CODIGO_katia = (código da Katia)   |   CODIGO_suenia = (código da Suênia)
+//   O <id> é o da coluna "ID" da aba Profissionais.
 
 // Valores gravados na planilha
 const EXEC_FEITO = 'feito';
@@ -347,8 +347,12 @@ function calculaPreco_(texto, precos) {
 }
 
 function profissionalPorCodigo_(codigo) {
-  const id = CODIGOS[String(codigo || '').trim()];
-  if (!id) return null;
+  const c = String(codigo || '').trim();
+  if (!c) return null;
+  const props = PropertiesService.getScriptProperties().getProperties();
+  const chave = Object.keys(props).find(k => k.indexOf('CODIGO_') === 0 && String(props[k]).trim() === c);
+  if (!chave) return null;
+  const id = norm_(chave.slice('CODIGO_'.length));
   const v = planilha_().getSheetByName('Profissionais').getDataRange().getValues();
   const cab = v[0].map(c => String(c).trim());
   const r = v.slice(1).find(l => norm_(l[cab.indexOf('ID')]) === id);

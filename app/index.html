@@ -286,6 +286,7 @@ $('#btnSair').addEventListener('click', () => {
 
 function mostrarLogin() {
   $('#app').classList.add('hidden'); $('#login').classList.remove('hidden');
+  if (DEMO) $('#loginErro').textContent = 'Demonstração: use o código demo-katia ou demo-suenia.';
   $('#codigo').value = ''; setTimeout(() => $('#codigo').focus(), 50);
 }
 function mostrarApp() {
@@ -639,7 +640,8 @@ function demoEstoque(acao, x) {
   return { ok: true, estoque: lista };
 }
 function demoResp(acao, x) {
-  const contas = { KatiaMK: { id: 'katia', nome: 'Katia' }, SueniaMK: { id: 'suenia', nome: 'Suênia' } };
+  // só para o modo demonstração (os códigos de verdade ficam no Apps Script)
+  const contas = { 'demo-katia': { id: 'katia', nome: 'Katia' }, 'demo-suenia': { id: 'suenia', nome: 'Suênia' } };
   const prof = contas[codigo];
   if (!prof) return { ok: false, erro: 'Código de acesso inválido.' };
   if (acao === 'login') return { ok: true, profissional: prof };

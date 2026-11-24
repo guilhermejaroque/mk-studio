@@ -294,7 +294,10 @@ async function enviar(acao, extra, msgOk) {
 }
 
 /* ---------------- login ---------------- */
-function mostrarLogin() { $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#codigo').focus(); }
+function mostrarLogin() {
+  $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#codigo').focus();
+  if (DEMO && !$('#loginErro').textContent) $('#loginErro').textContent = 'Demonstração: use o código demo.';
+}
 function mostrarApp() { $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); $('#demoBar').classList.toggle('hidden', !DEMO); }
 
 $('#loginForm').onsubmit = async ev => {
@@ -749,7 +752,7 @@ async function demoApi(corpo) {
     const ler = async f => (await fetch(f)).text();
     const codigoGs = (await ler('../mk-gestao-app/calculos.gs')) + '\n;\n' + (await ler('../mk-gestao-app/Codigo.gs'));
     await new Promise((ok, erro) => { const s = document.createElement('script'); s.src = 'demo.js'; s.onload = ok; s.onerror = erro; document.head.appendChild(s); });
-    demoServidor = MKDemo.servidor(codigoGs, MKDemo.fake(MKDemo.exemplo()));
+    demoServidor = MKDemo.servidor(codigoGs, MKDemo.fake(MKDemo.exemplo(), { props: { CODIGO_DONO: 'demo' } }));
   }
   await new Promise(r => setTimeout(r, 200));
   const r = demoServidor.doPost({ postData: { contents: JSON.stringify(corpo) } });

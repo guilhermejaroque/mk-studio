@@ -14,7 +14,7 @@ function novo(opcoes = {}) {
   const g = fake({
     Agenda: agenda,
     Profissionais: [['ID', 'Nome'], ['katia', 'Katia'], ['suenia', 'Suênia'], ['carla', 'Carla']]
-  }, { hoje: '2026-11-25' });
+  }, { hoje: '2026-11-25', props: { CODIGO_DONO: 'DonoMK' } });
   const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
   const p = (acao, extra = {}) => post(fns, { codigo: 'DonoMK', acao, ...extra });
   return { g, fns, p, abas: g._planilha.abas };
@@ -139,7 +139,7 @@ test('conta desativada sai da lista do mês mas continua no cadastro', () => {
 
 test('dados de exemplo do modo demonstração funcionam no servidor de verdade', () => {
   const { exemplo } = require('../gestao/demo.js');
-  const g = fake(exemplo('2026-11-25'), { hoje: '2026-11-25' });
+  const g = fake(exemplo('2026-11-25'), { hoje: '2026-11-25', props: { CODIGO_DONO: 'DonoMK' } });
   const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
   const d = post(fns, { codigo: 'DonoMK', acao: 'dados' });
   assert.equal(d.ok, true);
@@ -177,7 +177,7 @@ test('final: aluguel do mês passado ainda pode ser marcado depois que o mês vi
     Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
     Salas: [['ID', 'Nome', 'Valor mensal', 'Ocupada', 'Desde'], ['S1', 'Sala 1', 300, 'sim', "'2026-11"], ['S2', 'Sala 2', 300, 'não', '']],
     Config: [['Chave', 'Valor'], ['inicio', "'2026-11-02"]]
-  }, { hoje: '2026-12-03' });
+  }, { hoje: '2026-12-03', props: { CODIGO_DONO: 'DonoMK' } });
   const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
   let d = post(fns, { codigo: 'DonoMK', acao: 'dados', mes: '2026-11' });
   assert.deepEqual(JSON.parse(JSON.stringify(d.alugueis.map(a => [a.salaId, a.recebido]))), [['S1', false]]);
@@ -192,9 +192,23 @@ test('final: sala que fica livre continua no mês atual e nos anteriores, some d
     Agenda: [CAB_AGENDA],
     Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
     Salas: [['ID', 'Nome', 'Valor mensal', 'Ocupada', 'Desde'], ['S1', 'Sala 1', 300, 'sim', "'2026-10"], ['S2', 'Sala 2', 300, 'não', '']]
-  }, { hoje: '2026-11-25' });
+  }, { hoje: '2026-11-25', props: { CODIGO_DONO: 'DonoMK' } });
   const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
   post(fns, { codigo: 'DonoMK', acao: 'salvarSala', sala: { id: 'S1', nome: 'Sala 1', valor: 300, ocupada: false } });
   const m = mes => post(fns, { codigo: 'DonoMK', acao: 'dados', mes }).alugueis.length;
   assert.deepEqual([m('2026-10'), m('2026-11'), m('2026-12')], [1, 1, 0]);
+});
+
+test('código do dono vem das propriedades do script, não do código-fonte', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'mk-gestao-app', 'Codigo.gs'), 'utf8');
+  assert.ok(!/DonoMK/.test(src));
+  const g = fake({ Agenda: [CAB_AGENDA], Profissionais: [['ID', 'Nome']] }, { hoje: '2026-11-25' });
+  const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
+  const r = post(fns, { codigo: 'DonoMK', acao: 'login' });
+  assert.equal(r.ok, false);
+  assert.match(r.erro, /não configurado/);
+  const g2 = fake({ Agenda: [CAB_AGENDA], Profissionais: [['ID', 'Nome']] }, { hoje: '2026-11-25', props: { CODIGO_DONO: 'Novo123' } });
+  const f2 = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g2);
+  assert.equal(post(f2, { codigo: 'Novo123', acao: 'login' }).ok, true);
+  assert.equal(post(f2, { codigo: '', acao: 'login' }).ok, false);
 });

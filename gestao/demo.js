@@ -64,6 +64,12 @@
         }),
         flush: () => {}
       },
+      PropertiesService: {
+        getScriptProperties: () => ({
+          getProperty: k => (opcoes.props && Object.prototype.hasOwnProperty.call(opcoes.props, k) ? opcoes.props[k] : null),
+          getProperties: () => Object.assign({}, opcoes.props || {})
+        })
+      },
       LockService: { getScriptLock: () => ({ waitLock: () => {}, releaseLock: () => {} }) },
       ContentService: {
         MimeType: { JSON: 'json' },
@@ -83,7 +89,7 @@
 
   // Executa o código dos arquivos .gs com os globais do fake e devolve doPost.
   function servidor(codigo, globais) {
-    const nomes = ['SpreadsheetApp', 'LockService', 'ContentService', 'Utilities', 'Date'];
+    const nomes = ['SpreadsheetApp', 'PropertiesService', 'LockService', 'ContentService', 'Utilities', 'Date'];
     const fn = new Function(nomes.join(','), codigo + '\n;return { doPost: doPost };');
     return fn.apply(null, nomes.map(n => globais[n]));
   }

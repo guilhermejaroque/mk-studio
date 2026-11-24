@@ -7,13 +7,17 @@
  * no primeiro acesso.
  *
  * Arquivos do projeto: Codigo.gs (este) + calculos.gs
+ *
+ * CÓDIGO DE ACESSO (não fica no código, porque o repositório é público):
+ *   ⚙︎ Configurações do projeto > Propriedades do script > Adicionar propriedade
+ *   Propriedade: CODIGO_DONO    Valor: o código que o dono vai digitar no app
+ *
  * Implantar: Implantar > Nova implantação > Tipo "App da Web"
  *   Executar como: Eu   |   Quem pode acessar: Qualquer pessoa
  */
 
 const PLANILHA_ID = '1YSqEBkoa3ZsngWrP1Lsa-6A0GeeL54-lN84XsEpRY58';
 const FUSO = 'America/Sao_Paulo';
-const CODIGO_DONO = 'DonoMK';                 // código de acesso do app de gestão
 const IDS_EQUIPE = ['katia', 'suenia'];       // profissionais que recebem o acerto semanal (coluna ID de Profissionais)
 const SEMANAS_NA_TELA = 8;
 const MESES_NO_GRAFICO = 6;
@@ -37,7 +41,9 @@ function doGet() {
 function doPost(e) {
   try {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (String(req.codigo || '').trim() !== CODIGO_DONO) return json_({ ok: false, erro: 'Código de acesso inválido.' });
+    const codigoDono = String(PropertiesService.getScriptProperties().getProperty('CODIGO_DONO') || '').trim();
+    if (!codigoDono) return json_({ ok: false, erro: 'Código de acesso não configurado no servidor (propriedade CODIGO_DONO).' });
+    if (String(req.codigo || '').trim() !== codigoDono) return json_({ ok: false, erro: 'Código de acesso inválido.' });
     const mes = /^\d{4}-\d{2}$/.test(String(req.mes || '')) ? req.mes : mesDe(hojeISO_());
 
     if (req.acao === 'login') return json_({ ok: true, nome: 'Dono' });
