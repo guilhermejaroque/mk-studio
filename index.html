@@ -84,7 +84,25 @@ section.sec{padding-top:clamp(48px,7vw,88px);padding-bottom:clamp(40px,6vw,72px)
 .opt{min-height:48px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}
 .opt small{display:block;color:var(--soft);font-size:13px}
 .opt[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.opt .pr{display:block;color:var(--soft);font-size:13px;white-space:nowrap}
+.opt .desc{display:block;color:var(--soft);font-size:13px;line-height:1.35;margin-top:4px}
+.opt.add{position:relative;padding-right:40px}
+.opt.add::after{content:"";position:absolute;right:14px;top:14px;width:16px;height:16px;border-radius:5px;border:1px solid var(--line)}
+.opt.add[aria-pressed=true]::after{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--bg)}
+.cat{border:1px solid var(--line);border-radius:14px;margin-top:10px;background:var(--bg)}
+.cat .head{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:58px;padding:12px 18px;background:none;border:0;border-radius:14px;color:var(--ink);cursor:pointer;text-align:left}
+.cat .head small{display:block;color:var(--soft);font-size:13px}
+.cat .chev{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6}
+.cat.open{border-color:var(--ink)}
+.panel{display:grid;grid-template-rows:0fr}
+.cat.open .panel{grid-template-rows:1fr}
+.panel>div{overflow:hidden}
+.panel .svc{padding:2px 14px 14px}
+.cat:not(.open) .panel .svc{visibility:hidden}
+@media(prefers-reduced-motion:no-preference){.panel{transition:grid-template-rows .3s ease}.cat .chev{transition:transform .3s}}
+.cat.open .chev{transform:rotate(180deg)}
+@media(max-width:600px){#svcs>.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
 .day{flex:none;scroll-snap-align:start;width:66px;min-height:80px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:8px 0;line-height:1.2}
 .day small,.day i{font-size:13px;color:var(--soft);font-style:normal}
@@ -149,7 +167,7 @@ footer{border-top:1px solid var(--line);padding-top:24px;padding-bottom:32px;col
 .foot{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:20px}
 .foot .logo{justify-self:start}
 .foot p{margin:0;text-align:center}
-@media(max-width:600px){.foot{grid-template-columns:minmax(0,1fr);justify-items:center}.foot .logo{justify-self:center}footer{padding-bottom:88px}}
+@media(max-width:600px){.foot{grid-template-columns:minmax(0,1fr);justify-items:center}.foot .logo{justify-self:center;order:2}footer{padding-bottom:88px}}
 .logo{width:104px;height:104px;flex:none;color:var(--ink)}
 footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
 
@@ -233,7 +251,7 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
     <div class="book">
       <div>
         <div class="step"><h3>Profissional</h3><div class="chips" id="pros"></div></div>
-        <div class="step"><h3>Serviço</h3><div class="svc" id="svcs"></div></div>
+        <div class="step"><h3>Serviço</h3><div id="svcs"></div></div>
         <div class="step"><h3>Dia</h3><div class="days" id="days"></div></div>
         <div class="step">
           <div class="dayHead"><h3 id="dayTitle"></h3><div class="legend"><span style="--c:var(--bg)">Livre</span><span style="--c:var(--busy)">Ocupado</span><span style="--c:var(--ink)">Escolhido</span></div></div>
@@ -320,9 +338,28 @@ let PROS = [
   { id: "suenia", nome: "Suênia", papel: "Manicure", extras: [] }
 ];
 let SERVICOS = [
-  { nome: "Manicure" }, { nome: "Pedicure" }, { nome: "Pé e mão" },
-  { nome: "Esmaltação em gel" }, { nome: "Blindagem de unhas" }
+  { nome: "Manicure tradicional", preco: 35 },
+  { nome: "Pedicure tradicional", preco: 40 },
+  { nome: "Plástica dos pés", preco: 60 },
+  { nome: "Esmaltação tradicional", preco: 17.5 },
+  { nome: "Esmaltação tradicional pé", preco: 20 },
+  { nome: "Primeira aplicação + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 230 },
+  { nome: "Manutenção + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 140, descricao: "Recomendado a cada 14 ou 21 dias" },
+  { nome: "Manutenção por unha quebrada", categoria: "Alongamento no molde F1", preco: 10, porUnidade: true, descricao: "Valor unitário por unha quebrada antes do período de manutenção" },
+  { nome: "Remoção da esmaltação em gel", categoria: "Alongamento no molde F1", preco: 50 },
+  { nome: "Blindagem", categoria: "Alongamento no molde F1", preco: 150 },
+  { nome: "Banho de gel", categoria: "Alongamento no molde F1", preco: 150 },
+  { nome: "Pó cromado", categoria: "Decorações", tipo: "adicional", preco: 10 },
+  { nome: "BabyBoomer", categoria: "Decorações", tipo: "adicional", preco: 20 },
+  { nome: "Unhas encapsuladas", categoria: "Decorações", tipo: "adicional", preco: 10, porUnidade: true },
+  { nome: "Francesinha", categoria: "Decorações", tipo: "adicional", preco: 10 },
+  { nome: "Películas", categoria: "Decorações", tipo: "adicional", preco: 5 },
+  { nome: "Pedrarias", categoria: "Decorações", tipo: "adicional", preco: 5 }
 ];
+const normSvc = s => ({ nome: String(s.nome), categoria: String(s.categoria || ""), tipo: s.tipo === "adicional" ? "adicional" : "principal",
+  preco: s.preco == null || s.preco === "" || isNaN(+s.preco) ? null : +s.preco, porUnidade: !!s.porUnidade, descricao: String(s.descricao || "") });
+SERVICOS = SERVICOS.map(normSvc);
+const reais = v => "R$ " + v.toFixed(2).replace(".", ",");
 const PADRAO = ["08:00","09:30","11:00","13:30","15:00","16:30","18:00"];
 let BLOCOS = { 0: [], 1: [], 2: PADRAO, 3: PADRAO, 4: PADRAO, 5: PADRAO, 6: PADRAO };
 let ANTECEDENCIA = 30;
@@ -377,7 +414,9 @@ function demoData(){
   PROS.forEach(p => dates.forEach(d => (BLOCOS[d.getDay()] || []).concat(BLOCOS[d.getDay()]?.length ? p.extras || [] : []).forEach(h => { if (rnd() < .45) OCUP.add(key(p.id, iso(d), h)); })));
 }
 
-const st = { pro: PROS[0].id, svc: 0, day: 0, slot: null, ready: false };
+const st = { pro: PROS[0].id, svc: SERVICOS[0].nome, add: new Set(), open: new Set(), day: 0, slot: null, ready: false };
+const svc = () => SERVICOS.find(s => s.nome === st.svc) || SERVICOS.find(s => s.tipo !== "adicional");
+const extrasSel = () => SERVICOS.filter(s => s.tipo === "adicional" && st.add.has(s.nome));
 const firstOpen = () => Math.max(0, dates.findIndex((d,i) => !closed(d) && freeStarts(i).length));
 
 function status(dIdx, h){
@@ -396,7 +435,18 @@ function renderPros(){
   $("pros").innerHTML = PROS.map(p => `<button class="opt" type="button" data-p="${esc(p.id)}" aria-pressed="${p.id===st.pro}">${esc(p.nome)}<small>${esc(p.papel||"")}</small></button>`).join("");
 }
 function renderSvcs(){
-  $("svcs").innerHTML = SERVICOS.map((s,i) => `<button class="opt" type="button" data-s="${i}" aria-pressed="${i===st.svc}">${esc(s.nome)}<small>${esc(s.preco!=null&&s.preco!==""?"R$ "+s.preco+" · ":"")}1h30</small></button>`).join("");
+  const opt = s => { const i = SERVICOS.indexOf(s), add = s.tipo === "adicional", on = add ? st.add.has(s.nome) : s.nome === st.svc;
+    const pr = s.preco == null ? "" : reais(s.preco) + (s.porUnidade ? " / unidade" : "");
+    return `<button class="opt${add?" add":""}" type="button" data-n="${i}" aria-pressed="${on}">${esc(s.nome)}${pr?`<span class="pr">${esc(pr)}</span>`:""}${s.descricao?`<span class="desc">${esc(s.descricao)}</span>`:""}</button>`; };
+  const solo = SERVICOS.filter(s => !s.categoria);
+  const cats = [...new Set(SERVICOS.filter(s => s.categoria).map(s => s.categoria))];
+  const chev = `<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
+  $("svcs").innerHTML = (solo.length ? `<div class="svc">${solo.map(opt).join("")}</div>` : "") + cats.map(c => {
+    const items = SERVICOS.filter(s => s.categoria === c), isAdd = items.every(s => s.tipo === "adicional"), open = st.open.has(c);
+    const nSel = items.filter(s => st.add.has(s.nome)).length, cur = items.find(s => s.nome === st.svc);
+    const sub = isAdd ? (nSel ? `${nSel} selecionada${nSel>1?"s":""}` : "Opcional · escolha quantas quiser") : (cur ? cur.nome : `${items.length} opções`);
+    return `<div class="cat${open?" open":""}"><button class="head" type="button" data-cat="${esc(c)}" aria-expanded="${open}"><span>${esc(c)}<small>${esc(sub)}</small></span>${chev}</button><div class="panel"><div><div class="svc">${items.map(opt).join("")}</div></div></div></div>`;
+  }).join("");
 }
 function renderDays(){
   $("days").innerHTML = dates.map((d,i) => {
@@ -419,12 +469,14 @@ function renderDay(){
 const digits = v => v.replace(/\D/g,"").slice(0,11);
 const fmtTel = v => { const d = digits(v); if (d.length < 3) return d; const a = `(${d.slice(0,2)}) `, r = d.slice(2); return a + (r.length > 8 ? r.slice(0,5)+"-"+r.slice(5) : r.length > 4 ? r.slice(0,4)+"-"+r.slice(4) : r); };
 function summary(){
-  const d = dates[st.day], s = SERVICOS[st.svc], p = PROS.find(x => x.id === st.pro);
+  const d = dates[st.day], s = svc(), ex = extrasSel(), p = PROS.find(x => x.id === st.pro);
   const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+LEN)}`;
-  return `<dt>Com</dt><dd>${esc(p.nome)}</dd><dt>Serviço</dt><dd>${esc(s.nome)}</dd><dt>Dia</dt><dd>${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}</dd><dt>Horário</dt><dd>${when}</dd>`;
+  const itens = [s, ...ex], soma = itens.reduce((t,x) => t + (x.preco || 0), 0), aPartir = itens.some(x => x.porUnidade);
+  const valor = itens.some(x => x.preco != null) ? (aPartir ? "a partir de " : "") + reais(soma) : "";
+  return `<dt>Com</dt><dd>${esc(p.nome)}</dd><dt>Serviço</dt><dd>${esc(s.nome)}</dd>${ex.length?`<dt>Decorações</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}</dd><dt>Horário</dt><dd>${when}</dd>`;
 }
 function renderSum(){
-  const d = dates[st.day], s = SERVICOS[st.svc];
+  const d = dates[st.day], s = svc();
   $("sum").innerHTML = summary();
   $("err").hidden = true;
   $("barText").textContent = st.slot === null ? "Escolha um horário" : `${s.nome} · ${DIAS[d.getDay()]} ${d.getDate()} · ${hm(st.slot)}`;
@@ -432,7 +484,15 @@ function renderSum(){
 function all(){ renderPros(); renderSvcs(); renderDays(); renderDay(); renderSum(); }
 
 $("pros").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; st.pro = b.dataset.p; st.slot = null; all(); });
-$("svcs").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; st.svc = +b.dataset.s; renderSvcs(); renderSum(); });
+$("svcs").addEventListener("click", e => {
+  const h = e.target.closest("[data-cat]");
+  if (h) { const c = h.dataset.cat, box = h.parentElement, on = !box.classList.contains("open");
+    box.classList.toggle("open", on); h.setAttribute("aria-expanded", on); on ? st.open.add(c) : st.open.delete(c); return; }
+  const b = e.target.closest("[data-n]"); if (!b) return;
+  const s = SERVICOS[+b.dataset.n]; if (!s) return;
+  if (s.tipo === "adicional") st.add.has(s.nome) ? st.add.delete(s.nome) : st.add.add(s.nome); else st.svc = s.nome;
+  renderSvcs(); renderSum();
+});
 $("days").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b || b.disabled) return; st.day = +b.dataset.d; st.slot = null; all(); });
 $("slots").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b || b.disabled) return; st.slot = +b.dataset.t; renderDay(); renderSum(); });
 $("tel").addEventListener("input", e => { e.target.value = fmtTel(e.target.value); });
@@ -447,14 +507,15 @@ async function load(){
     clearTimeout(timer);
     if (!j.ok) throw new Error(j.erro);
     PROS = j.profissionais.map(p => ({ id: String(p.id), nome: String(p.nome), papel: String(p.funcao || ""), extras: (p.extras || []).map(String) }));
-    SERVICOS = j.servicos.map(s => ({ nome: String(s.nome), preco: s.preco }));
+    SERVICOS = j.servicos.map(normSvc);
     BLOCOS = {}; Object.keys(j.blocos).forEach(k => BLOCOS[k] = j.blocos[k].map(String));
     LEN = +j.duracaoBloco || 90; NDIAS = (+j.diasAFrente || 30) + 1; ANTECEDENCIA = +j.antecedenciaMin || 30;
     const [y,m,d] = String(j.hoje).split("-").map(Number); today = new Date(y, m-1, d); makeDates();
     const base = +j.agoraMin, t0 = Date.now(); nowMin = () => base + Math.floor((Date.now()-t0)/60000);
     OCUP = new Set(j.ocupados.map(o => key(o.p, o.d, o.h)));
     if (!PROS.some(p => p.id === st.pro)) st.pro = PROS[0].id;
-    if (st.svc >= SERVICOS.length) st.svc = 0;
+    if (!SERVICOS.some(s => s.nome === st.svc && s.tipo !== "adicional")) st.svc = (SERVICOS.find(s => s.tipo !== "adicional") || SERVICOS[0]).nome;
+    st.add = new Set([...st.add].filter(n => SERVICOS.some(s => s.nome === n && s.tipo === "adicional")));
     if (!st.ready){ st.day = firstOpen(); }
     st.ready = true; all();
   } catch (e) {
@@ -472,7 +533,7 @@ $("form").addEventListener("submit", async e => {
   if (nome.length < 2) { $("nome").focus(); return fail("Escreva seu nome."); }
   if (tel.length < 10) { $("tel").focus(); return fail("Escreva um telefone com DDD."); }
   const h = pad(Math.floor(st.slot/60))+":"+pad(st.slot%60), d = iso(dates[st.day]);
-  const pedido = { profissional: st.pro, servico: SERVICOS[st.svc].nome, data: d, horario: h, cliente: nome, telefone: tel, obs: $("obs").value.trim(), site: $("hp").value };
+  const pedido = { profissional: st.pro, servico: svc().nome, adicionais: extrasSel().map(x => x.nome), data: d, horario: h, cliente: nome, telefone: tel, obs: $("obs").value.trim(), site: $("hp").value };
   const done = () => {
     OCUP.add(key(st.pro, d, h));
     $("doneSum").innerHTML = summary() + `<dt>Nome</dt><dd>${esc(nome)}</dd>`;
