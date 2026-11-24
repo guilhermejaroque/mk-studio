@@ -17,7 +17,7 @@
 :root{color-scheme:light dark;--bg:light-dark(#ffffff,#121010);--ink:light-dark(#19130f,#f2ece4);--soft:light-dark(#6f645b,#b9ada1);--sand:light-dark(#efe6da,#221c18);--cacao:light-dark(#5a4232,#c9a98c);--line:light-dark(#e3dbd1,#352d27);--panel:light-dark(#faf7f3,#1a1613);--busy:light-dark(#ece6df,#26201c)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
-html{scroll-behavior:smooth;scroll-padding-top:72px}
+html{scroll-behavior:smooth;scroll-padding-top:96px}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:300 16px/1.6 Jost,"Futura","Century Gothic",system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-weight:400;line-height:1.08;letter-spacing:-.01em;margin:0}
@@ -250,10 +250,10 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
     <p class="lede">Escolha a profissional, o serviço e um horário livre. O horário fica reservado assim que você confirmar.</p>
     <div class="book">
       <div>
-        <div class="step"><h3>Profissional</h3><div class="chips" id="pros"></div></div>
-        <div class="step"><h3>Serviço</h3><div id="svcs"></div></div>
-        <div class="step"><h3>Dia</h3><div class="days" id="days"></div></div>
-        <div class="step">
+        <div class="step" id="step-pro"><h3>Profissional</h3><div class="chips" id="pros"></div></div>
+        <div class="step" id="step-svc"><h3>Serviço</h3><div id="svcs"></div></div>
+        <div class="step" id="step-dia"><h3>Dia</h3><div class="days" id="days"></div></div>
+        <div class="step" id="step-hora">
           <div class="dayHead"><h3 id="dayTitle"></h3><div class="legend"><span style="--c:var(--bg)">Livre</span><span style="--c:var(--busy)">Ocupado</span><span style="--c:var(--ink)">Escolhido</span></div></div>
           <div id="slots"></div>
           <p class="sample" id="demoNote">Horários ocupados de exemplo. No site publicado eles vêm da planilha da agenda.</p>
@@ -369,8 +369,8 @@ const FOTOS = [
   { t: "Manicure", c: "Francesinha", f: "francesinha" },
   { t: "Esmaltação", c: "Azul royal", f: "azul" }
 ];
-const proAtual = () => PROS.find(p => p.id === st.pro) || PROS[0];
-const blocosDe = d => { const dia = BLOCOS[d.getDay()] || []; return dia.length ? dia.concat((proAtual().extras || []).filter(h => !dia.includes(h))) : []; };
+const proAtual = () => PROS.find(p => p.id === st.pro) || null;
+const blocosDe = d => { const dia = BLOCOS[d.getDay()] || []; return dia.length ? dia.concat(((proAtual() || {}).extras || []).filter(h => !dia.includes(h))) : []; };
 const closed = d => !blocosDe(d).length;
 const DIAS = ["dom","seg","ter","qua","qui","sex","sáb"];
 const DIAS_LONGO = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
@@ -411,13 +411,17 @@ const key = (p,d,h) => p+"|"+d+"|"+h;
 function demoData(){
   let s = 7;
   const rnd = () => (s = s*16807 % 2147483647) / 2147483647;
+  const t = dates.filter(d => !closed(d))[3]; if (t) FOLGA.set("suenia|" + iso(t), "folga");
   PROS.forEach(p => dates.forEach(d => (BLOCOS[d.getDay()] || []).concat(BLOCOS[d.getDay()]?.length ? p.extras || [] : []).forEach(h => { if (rnd() < .45) OCUP.add(key(p.id, iso(d), h)); })));
 }
 
-const st = { pro: PROS[0].id, svc: SERVICOS[0].nome, add: new Set(), open: new Set(), day: 0, slot: null, ready: false };
-const svc = () => SERVICOS.find(s => s.nome === st.svc) || SERVICOS.find(s => s.tipo !== "adicional");
+const st = { pro: null, svc: null, add: new Set(), open: new Set(), day: null, slot: null, ready: false };
+const svc = () => SERVICOS.find(s => s.nome === st.svc && s.tipo !== "adicional") || null;
 const extrasSel = () => SERVICOS.filter(s => s.tipo === "adicional" && st.add.has(s.nome));
-const firstOpen = () => Math.max(0, dates.findIndex((d,i) => !closed(d) && freeStarts(i).length));
+
+// folgas e dias fechados por profissional: chave "profissional|data" -> "folga" | "fechado"
+let FOLGA = new Map();
+const folgaDe = dIdx => st.pro && dates[dIdx] ? FOLGA.get(st.pro + "|" + iso(dates[dIdx])) || "" : "";
 
 function status(dIdx, h){
   const d = dates[dIdx], m = toMin(h);
@@ -427,8 +431,19 @@ function status(dIdx, h){
 }
 function freeStarts(dIdx){
   const d = dates[dIdx];
-  if (!d || closed(d)) return [];
+  if (!d || closed(d) || !st.pro || folgaDe(dIdx)) return [];
   return blocosDe(d).filter(h => status(dIdx, h) === "Livre").map(toMin);
+}
+
+// rolagem automática para a próxima etapa
+const calmo = matchMedia("(prefers-reduced-motion: reduce)");
+const celular = matchMedia("(max-width: 900px)");
+function irPara(el){
+  if (!el) return;
+  setTimeout(() => {
+    const centro = el.offsetHeight < innerHeight - 140;
+    el.scrollIntoView({ behavior: calmo.matches ? "auto" : "smooth", block: centro && el.id === "panel" ? "center" : "start" });
+  }, 80);
 }
 
 function renderPros(){
@@ -445,19 +460,31 @@ function renderSvcs(){
     const items = SERVICOS.filter(s => s.categoria === c), isAdd = items.every(s => s.tipo === "adicional"), open = st.open.has(c);
     const nSel = items.filter(s => st.add.has(s.nome)).length, cur = items.find(s => s.nome === st.svc);
     const sub = isAdd ? (nSel ? `${nSel} selecionada${nSel>1?"s":""}` : "Opcional · escolha quantas quiser") : (cur ? cur.nome : `${items.length} opções`);
-    return `<div class="cat${open?" open":""}"><button class="head" type="button" data-cat="${esc(c)}" aria-expanded="${open}"><span>${esc(c)}<small>${esc(sub)}</small></span>${chev}</button><div class="panel"><div><div class="svc">${items.map(opt).join("")}</div></div></div></div>`;
+    return `<div class="cat${open?" open":""}" data-box="${esc(c)}" data-add="${isAdd}"><button class="head" type="button" data-cat="${esc(c)}" aria-expanded="${open}"><span>${esc(c)}<small>${esc(sub)}</small></span>${chev}</button><div class="panel"><div><div class="svc">${items.map(opt).join("")}</div></div></div></div>`;
   }).join("");
 }
+function dayLabel(i){
+  const d = dates[i];
+  if (closed(d)) return { off: true, t: "fechado" };
+  const f = folgaDe(i);
+  if (f) return { off: true, t: f };
+  if (st.pro && !freeStarts(i).length) return { off: true, t: "lotado" };
+  return { off: false, t: MESES[d.getMonth()] };
+}
 function renderDays(){
-  $("days").innerHTML = dates.map((d,i) => {
-    const fx = closed(d), n = fx ? 0 : freeStarts(i).length;
-    return `<button class="day" type="button" data-d="${i}" aria-pressed="${i===st.day}" ${fx||!n?"disabled":""}><small>${i===0?"hoje":DIAS[d.getDay()]}</small><b>${d.getDate()}</b><i>${fx?"fechado":n?MESES[d.getMonth()]:"lotado"}</i></button>`;
+  $("days").innerHTML = dates.map((d,i) => { const l = dayLabel(i);
+    return `<button class="day" type="button" data-d="${i}" aria-pressed="${i===st.day}" ${l.off?"disabled":""}><small>${i===0?"hoje":DIAS[d.getDay()]}</small><b>${d.getDate()}</b><i>${l.t}</i></button>`;
   }).join("");
 }
 function renderDay(){
-  const d = dates[st.day];
-  $("dayTitle").textContent = DIAS_LONGO[d.getDay()].replace(/^./, c => c.toUpperCase()) + ", " + d.getDate() + " de " + MESES[d.getMonth()];
+  const d = st.day === null ? null : dates[st.day];
+  $("dayTitle").textContent = d ? DIAS_LONGO[d.getDay()].replace(/^./, c => c.toUpperCase()) + ", " + d.getDate() + " de " + MESES[d.getMonth()] : "Horários";
   if (!st.ready){ $("slots").innerHTML = `<div class="empty">Carregando a agenda…</div>`; return; }
+  const p = proAtual();
+  if (!p){ $("slots").innerHTML = `<div class="empty">Escolha a profissional para ver os horários livres.</div>`; return; }
+  if (!d){ $("slots").innerHTML = `<div class="empty">Escolha um dia para ver os horários livres.</div>`; return; }
+  const f = folgaDe(st.day);
+  if (f){ $("slots").innerHTML = `<div class="empty">${f === "folga" ? `${esc(p.nome)} está de folga neste dia.` : "O salão estará fechado neste dia."} Escolha outro dia.</div>`; return; }
   const list = blocosDe(d), manha = list.filter(h => toMin(h) < 750), tarde = list.filter(h => toMin(h) >= 750 && toMin(h) < 1170), noite = list.filter(h => toMin(h) >= 1170);
   const blk = h => { const m = toMin(h), x = status(st.day, h), ok = x === "Livre";
     return `<button class="blk" type="button" data-t="${m}" aria-pressed="${m===st.slot}" ${ok?"":"disabled"}><b>${hm(m)} – ${hm(m+LEN)}</b><span>${m===st.slot?"Escolhido":x}</span></button>`; };
@@ -469,38 +496,54 @@ function renderDay(){
 const digits = v => v.replace(/\D/g,"").slice(0,11);
 const fmtTel = v => { const d = digits(v); if (d.length < 3) return d; const a = `(${d.slice(0,2)}) `, r = d.slice(2); return a + (r.length > 8 ? r.slice(0,5)+"-"+r.slice(5) : r.length > 4 ? r.slice(0,4)+"-"+r.slice(4) : r); };
 function summary(){
-  const d = dates[st.day], s = svc(), ex = extrasSel(), p = PROS.find(x => x.id === st.pro);
+  const d = st.day === null ? null : dates[st.day], s = svc(), ex = extrasSel(), p = proAtual();
   const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+LEN)}`;
-  const itens = [s, ...ex], soma = itens.reduce((t,x) => t + (x.preco || 0), 0), aPartir = itens.some(x => x.porUnidade);
+  const itens = [s, ...ex].filter(Boolean), soma = itens.reduce((t,x) => t + (x.preco || 0), 0), aPartir = itens.some(x => x.porUnidade);
   const valor = itens.some(x => x.preco != null) ? (aPartir ? "a partir de " : "") + reais(soma) : "";
-  return `<dt>Com</dt><dd>${esc(p.nome)}</dd><dt>Serviço</dt><dd>${esc(s.nome)}</dd>${ex.length?`<dt>Decorações</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}</dd><dt>Horário</dt><dd>${when}</dd>`;
+  return `<dt>Com</dt><dd>${p ? esc(p.nome) : "escolha a profissional"}</dd><dt>Serviço</dt><dd>${s ? esc(s.nome) : "escolha o serviço"}</dd>${ex.length?`<dt>Decorações</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${d ? `${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}` : "escolha um dia"}</dd><dt>Horário</dt><dd>${when}</dd>`;
 }
 function renderSum(){
-  const d = dates[st.day], s = svc();
+  const d = st.day === null ? null : dates[st.day], s = svc();
   $("sum").innerHTML = summary();
   $("err").hidden = true;
-  $("barText").textContent = st.slot === null ? "Escolha um horário" : `${s.nome} · ${DIAS[d.getDay()]} ${d.getDate()} · ${hm(st.slot)}`;
+  $("barText").textContent = st.slot === null || !d ? "Escolha um horário" : `${s ? s.nome + " · " : ""}${DIAS[d.getDay()]} ${d.getDate()} · ${hm(st.slot)}`;
 }
 function all(){ renderPros(); renderSvcs(); renderDays(); renderDay(); renderSum(); }
 
-$("pros").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; st.pro = b.dataset.p; st.slot = null; all(); });
+// clicar de novo numa opção escolhida desfaz a escolha
+$("pros").addEventListener("click", e => {
+  const b = e.target.closest("[data-p]"); if (!b) return;
+  const novo = st.pro === b.dataset.p ? null : b.dataset.p;
+  st.pro = novo; st.slot = null; all();
+  if (novo) irPara($("step-svc"));
+});
 $("svcs").addEventListener("click", e => {
   const h = e.target.closest("[data-cat]");
   if (h) { const c = h.dataset.cat, box = h.parentElement, on = !box.classList.contains("open");
     box.classList.toggle("open", on); h.setAttribute("aria-expanded", on); on ? st.open.add(c) : st.open.delete(c); return; }
   const b = e.target.closest("[data-n]"); if (!b) return;
   const s = SERVICOS[+b.dataset.n]; if (!s) return;
-  if (s.tipo === "adicional") st.add.has(s.nome) ? st.add.delete(s.nome) : st.add.add(s.nome); else st.svc = s.nome;
+  if (s.tipo === "adicional") { st.add.has(s.nome) ? st.add.delete(s.nome) : st.add.add(s.nome); renderSvcs(); renderSum(); return; }
+  st.svc = st.svc === s.nome ? null : s.nome;
   renderSvcs(); renderSum();
+  if (st.svc) irPara(document.querySelector('#svcs [data-add="true"]') || $("step-dia"));
 });
-$("days").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b || b.disabled) return; st.day = +b.dataset.d; st.slot = null; all(); });
-$("slots").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b || b.disabled) return; st.slot = +b.dataset.t; renderDay(); renderSum(); });
+$("days").addEventListener("click", e => {
+  const b = e.target.closest("[data-d]"); if (!b || b.disabled) return;
+  const i = +b.dataset.d; st.day = st.day === i ? null : i; st.slot = null; all();
+  if (st.day !== null) irPara($("step-hora"));
+});
+$("slots").addEventListener("click", e => {
+  const b = e.target.closest("[data-t]"); if (!b || b.disabled) return;
+  const m = +b.dataset.t; st.slot = st.slot === m ? null : m; renderDay(); renderSum();
+  if (st.slot !== null) { irPara($("panel")); if (!celular.matches) setTimeout(() => $("nome").focus({ preventScroll: true }), 700); }
+});
 $("tel").addEventListener("input", e => { e.target.value = fmtTel(e.target.value); });
 const fail = t => { $("err").textContent = t; $("err").hidden = false; };
 
 // carregar agenda da planilha
 async function load(){
-  if (!API){ demoData(); st.ready = true; st.day = firstOpen(); const f = freeStarts(st.day); st.slot = f.length > 1 ? f[1] : f[0] ?? null; all(); return; }
+  if (!API){ demoData(); st.ready = true; all(); return; }
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 10000);
   try {
     const r = await fetch(API, { signal: ctl.signal }); const j = await r.json();
@@ -513,10 +556,11 @@ async function load(){
     const [y,m,d] = String(j.hoje).split("-").map(Number); today = new Date(y, m-1, d); makeDates();
     const base = +j.agoraMin, t0 = Date.now(); nowMin = () => base + Math.floor((Date.now()-t0)/60000);
     OCUP = new Set(j.ocupados.map(o => key(o.p, o.d, o.h)));
-    if (!PROS.some(p => p.id === st.pro)) st.pro = PROS[0].id;
-    if (!SERVICOS.some(s => s.nome === st.svc && s.tipo !== "adicional")) st.svc = (SERVICOS.find(s => s.tipo !== "adicional") || SERVICOS[0]).nome;
+    FOLGA = new Map((j.folgas || []).map(f => [f.p + "|" + f.d, f.t === "fechado" ? "fechado" : "folga"]));
+    if (st.pro && !PROS.some(p => p.id === st.pro)) st.pro = null;
+    if (st.svc && !svc()) st.svc = null;
+    if (st.day !== null && st.day >= dates.length) { st.day = null; st.slot = null; }
     st.add = new Set([...st.add].filter(n => SERVICOS.some(s => s.nome === n && s.tipo === "adicional")));
-    if (!st.ready){ st.day = firstOpen(); }
     st.ready = true; all();
   } catch (e) {
     clearTimeout(timer);
@@ -529,7 +573,9 @@ $("form").addEventListener("submit", async e => {
   e.preventDefault();
   if (!st.ready) return;
   const nome = $("nome").value.trim(), tel = digits($("tel").value);
-  if (st.slot === null) return fail("Escolha um horário livre.");
+  if (!st.pro) return fail("Escolha a profissional.");
+  if (!svc()) return fail("Escolha o serviço.");
+  if (st.day === null || st.slot === null) return fail("Escolha um dia e um horário livre.");
   if (nome.length < 2) { $("nome").focus(); return fail("Escreva seu nome."); }
   if (tel.length < 10) { $("tel").focus(); return fail("Escreva um telefone com DDD."); }
   const h = pad(Math.floor(st.slot/60))+":"+pad(st.slot%60), d = iso(dates[st.day]);
@@ -550,7 +596,7 @@ $("form").addEventListener("submit", async e => {
   } catch { fail("Sem conexão com a agenda. Tente de novo."); }
   go.disabled = false; go.textContent = "Confirmar agendamento";
 });
-$("again").addEventListener("click", () => { $("form").reset(); $("doneView").hidden = true; $("formView").hidden = false; const f = freeStarts(st.day); st.slot = f.length ? f[0] : null; all(); if (API) load(); });
+$("again").addEventListener("click", () => { $("form").reset(); $("doneView").hidden = true; $("formView").hidden = false; st.slot = null; all(); if (API) load(); });
 
 // barra do celular só aparece na área de agendamento
 const bo = new IntersectionObserver(es => es.forEach(x => $("bar").classList.toggle("on", x.isIntersecting)), { threshold: .05 });
