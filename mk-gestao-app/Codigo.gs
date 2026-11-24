@@ -87,14 +87,13 @@ function dados_(mes) {
     historico.push({ mes: m, entrou: r.entrou.total, saiu: r.saiu.total, sobrou: r.sobrou });
   }
 
-  const contas = tabela_('Contas').linhas.map(r => {
-    const id = String(r['ID']);
-    const l = lanc.find(x => x.contaId === id && x.mes === mes);
-    return {
-      id: id, nome: String(r['Nome']), categoria: String(r['Categoria'] || 'Fixas'),
-      fixa: simNao_(r['Fixa']), ativa: simNao_(r['Ativa']),
-      lanc: l ? { id: l.id, valor: l.valor, pago: l.pago } : null
-    };
+  const cadastroContas = tabela_('Contas').linhas.map(r => ({
+    id: String(r['ID']), nome: String(r['Nome']), categoria: String(r['Categoria'] || 'Fixas'),
+    fixa: simNao_(r['Fixa']), ativa: simNao_(r['Ativa'])
+  })).sort((a, b) => a.nome.localeCompare(b.nome));
+  const contas = cadastroContas.map(c => {
+    const l = lanc.find(x => x.contaId === c.id && x.mes === mes);
+    return Object.assign({}, c, { lanc: l ? { id: l.id, valor: l.valor, pago: l.pago } : null });
   }).filter(c => (c.fixa && c.ativa) || c.lanc);
 
   const salas = salas_();
@@ -116,6 +115,7 @@ function dados_(mes) {
     resumo: resumoDe(mes),
     historico: historico,
     contas: contas,
+    cadastroContas: cadastroContas,
     avulsos: lanc.filter(l => !l.contaId && l.mes === mes)
       .map(l => ({ id: l.id, data: l.data, descricao: l.descricao, categoria: l.categoria, valor: l.valor, pago: l.pago }))
       .sort((a, b) => a.data.localeCompare(b.data)),

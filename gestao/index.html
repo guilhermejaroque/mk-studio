@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MK Studio · Gestão</title>
+<!-- versão 1.0 -->
+<meta name="theme-color" content="#19130f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MK Gestão">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f7f3ee; --ink:#19130f; --soft:#6f645b; --sand:#efe6da; --cacao:#5a4232;
+    --line:#e3dbd1; --panel:#fff; --ok:#2f7a4f; --ok-bg:#e6f2ea; --no:#a2412f; --no-bg:#f7e6e1;
+    --warn:#8a6418; --warn-bg:#fbf1dc; --r:18px;
+    font-family:"Jost",system-ui,-apple-system,sans-serif; color:var(--ink); background:var(--bg);
+    -webkit-tap-highlight-color:transparent;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:var(--bg)}
+  body{font-size:17px;line-height:1.35}
+  button{font:inherit;border:0;background:none;color:inherit;cursor:pointer;padding:0}
+  input,select{font:inherit;color:inherit}
+  .hidden{display:none!important}
+  .serif{font-family:"Cormorant Garamond",Georgia,serif}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ---------- login ---------- */
+  #login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:32px 28px;max-width:440px;margin:0 auto}
+  .logo{font-size:46px;font-weight:600;margin:0;letter-spacing:.01em}
+  .sub{color:var(--soft);margin:4px 0 34px;font-size:18px}
+  #login label{font-size:15px;color:var(--soft)}
+  #login input{width:100%;margin:8px 0 14px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--panel);font-size:18px;outline:0}
+  .btn-main{width:100%;padding:17px;border-radius:14px;background:var(--ink);color:#fff;font-weight:600;font-size:17px}
+  #loginErro{color:var(--no);margin-top:14px;min-height:22px;font-size:15px}
+
+  /* ---------- topo ---------- */
+  .demo{background:var(--warn-bg);color:var(--warn);text-align:center;font-size:14px;padding:6px}
+  header{position:sticky;top:0;z-index:5;background:var(--ink);color:#f2ece4;padding:calc(12px + env(safe-area-inset-top)) 18px 16px;border-radius:0 0 24px 24px}
+  .topline{display:flex;align-items:center;justify-content:space-between}
+  .brand{font-size:24px;font-weight:600}
+  .brand small{font-family:"Jost",sans-serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#bfae9c;margin-left:6px}
+  .icon-btn{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);display:grid;place-items:center}
+  .icon-btn svg{width:21px;height:21px}
+  .mes{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+  .mes button{width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.08);font-size:26px;line-height:1}
+  .mes .nome{font-size:20px;font-weight:500}
+
+  main{padding:18px 16px calc(110px + env(safe-area-inset-bottom));max-width:620px;margin:0 auto}
+  h2{font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;font-weight:600;margin:20px 2px 10px}
+  h2:first-child{margin-top:4px}
+  .muted{color:var(--soft);font-size:15px}
+
+  /* ---------- barra de abas ---------- */
+  nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
+    display:flex;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;color:var(--soft);font-size:12.5px;border-radius:12px;min-height:56px}
+  nav.tabs svg{width:24px;height:24px}
+  nav.tabs button.sel{color:var(--cacao);font-weight:600;background:var(--sand)}
+
+  /* ---------- cartões ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+  .tap{cursor:pointer}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .row .t{font-weight:500;font-size:17px}
+  .row .s{color:var(--soft);font-size:14px;margin-top:2px}
+  .val{font-weight:600;font-size:18px;white-space:nowrap}
+  .pill{display:inline-block;font-size:13px;font-weight:600;padding:5px 11px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:var(--ok-bg);color:var(--ok)}
+  .pill.no{background:var(--warn-bg);color:var(--warn)}
+  .pill.mut{background:var(--sand);color:var(--cacao)}
+  .add{display:block;width:100%;padding:16px;border-radius:16px;border:1.5px dashed #cbbfb2;color:var(--cacao);font-weight:600;font-size:16px;margin:4px 0 8px}
+  .empty{text-align:center;color:var(--soft);padding:22px 10px;font-size:15px}
+
+  /* ---------- resumo ---------- */
+  .big{border-radius:22px;padding:18px 18px 16px;margin-bottom:12px;cursor:pointer}
+  .big .lbl{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:500}
+  .big .v{font-size:38px;font-weight:500;margin-top:2px}
+  .big .v small{font-size:20px;margin-right:4px;opacity:.75}
+  .big.in{background:var(--ok-bg);color:var(--ok)}
+  .big.out{background:var(--no-bg);color:var(--no)}
+  .big.net{background:var(--ink);color:#f2ece4}
+  .big.net.neg .v{color:#f0a593}
+  .det{margin-top:10px;border-top:1px solid rgba(0,0,0,.08);padding-top:8px;font-size:15px}
+  .big.net .det{border-color:rgba(255,255,255,.15)}
+  .det div{display:flex;justify-content:space-between;padding:4px 0}
+  .chev{float:right;font-size:14px;opacity:.6;letter-spacing:0;text-transform:none}
+  .chart{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 10px 8px}
+  .legend{display:flex;gap:16px;font-size:13px;color:var(--soft);padding:0 6px 6px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+  /* ---------- entradas ---------- */
+  .tot div{display:flex;justify-content:space-between;padding:5px 0;font-size:16px}
+  .tot div.l{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:600}
+  .dia{font-weight:600;color:var(--cacao);margin:16px 2px 8px;font-size:15px}
+  .at{display:flex;justify-content:space-between;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+  .at:first-child{border-top:0;padding-top:2px}
+  .at .t{font-size:16px}
+  .at .s{font-size:13.5px;color:var(--soft)}
+  .badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--sand);color:var(--cacao);margin-top:3px}
+  .toggle{padding:12px 16px;border-radius:14px;font-weight:600;font-size:15px;min-height:48px}
+  .toggle.on{background:var(--ok);color:#fff}
+  .toggle.off{background:var(--sand);color:var(--cacao)}
+
+  /* ---------- equipe ---------- */
+  .wk h3{margin:0 0 4px;font-size:17px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+  .prof{padding:12px 0;border-top:1px solid var(--line)}
+  .prof:first-of-type{border-top:0}
+  .pay-btn{padding:12px 14px;border-radius:14px;background:var(--ink);color:#fff;font-weight:600;font-size:15px;min-height:48px}
+  .undo{font-size:14px;color:var(--soft);text-decoration:underline;margin-left:8px}
+  .warn{margin-top:8px;background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:9px 12px;font-size:14px}
+
+  /* ---------- estoque ---------- */
+  .comprar{background:var(--warn-bg);border-radius:var(--r);padding:14px 16px;margin-bottom:14px;color:var(--warn)}
+  .comprar b{display:block;font-size:13px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+  .comprar.vazio{background:var(--ok-bg);color:var(--ok)}
+  .qty{display:flex;align-items:center;gap:8px}
+  .qty button{width:48px;height:48px;border-radius:14px;background:var(--sand);color:var(--cacao);font-size:26px;font-weight:500;line-height:1}
+  .qty .n{min-width:34px;text-align:center;font-size:20px;font-weight:600}
+  .card.low{border-color:#e9cf9a}
+
+  /* ---------- folha (bottom sheet) ---------- */
+  .scrim{position:fixed;inset:0;background:rgba(25,19,15,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+  .sheet{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--panel);border-radius:24px 24px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .25s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+  .sheet h3{margin:0 0 4px;font-family:"Cormorant Garamond",Georgia,serif;font-size:28px;font-weight:600}
+  .sheet h4{margin:20px 0 6px;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft);font-weight:500}
+  .sheet p{margin:4px 0 14px;color:var(--soft);font-size:15px}
+  .sheet label{display:block;font-size:14px;color:var(--soft);margin-top:12px}
+  .field{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:14px;padding:4px 14px;margin:6px 0 2px;background:var(--panel)}
+  .field span{color:var(--soft)}
+  .field input{border:0;outline:0;flex:1;font-size:20px;padding:11px 0;background:transparent;min-width:0}
+  .field.money input{font-size:24px;font-variant-numeric:tabular-nums}
+  .field.err{border-color:var(--no)}
+  .erro{color:var(--no);font-size:14px;min-height:18px;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+  .chips button{padding:11px 15px;border-radius:999px;border:1.5px solid var(--line);font-size:15px;min-height:44px}
+  .chips button.sel{background:var(--cacao);border-color:var(--cacao);color:#fff}
+  .seg{display:flex;gap:8px;margin-top:8px}
+  .seg button{flex:1;padding:14px 0;border-radius:14px;border:1.5px solid var(--line);font-weight:600;min-height:50px}
+  .seg button.sel.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+  .seg button.sel.no{background:var(--cacao);border-color:var(--cacao);color:#fff}
+  .btns{display:flex;gap:10px;margin-top:20px}
+  .btns button{flex:1;padding:16px;border-radius:14px;font-weight:600;font-size:16px;min-height:54px}
+  .btns button:disabled{opacity:.5}
+  .b-ghost{background:var(--sand);color:var(--cacao)}
+  .b-dark{background:var(--ink);color:#fff}
+  .b-red{background:var(--no-bg);color:var(--no)}
+  .link{color:var(--cacao);text-decoration:underline;font-size:15px;margin-top:14px;display:inline-block}
+  .hist div{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);font-size:16px}
+  .hist div:first-child{border-top:0}
+  .sala{padding:12px 0;border-top:1px solid var(--line)}
+  .sala:first-of-type{border-top:0}
+
+  .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:999px;font-size:15px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.18);white-space:nowrap}
+  .toast.err{background:var(--no);white-space:normal;width:max-content;max-width:90vw;text-align:center;border-radius:16px}
+  .loading{opacity:.55;pointer-events:none;transition:opacity .2s}
+</style>
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<section id="login" class="hidden">
+  <h1 class="logo serif">MK Studio</h1>
+  <div class="sub">Gestão do salão</div>
+  <form id="loginForm" autocomplete="off">
+    <label for="codigo">Código de acesso</label>
+    <input id="codigo" type="password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Digite seu código">
+    <button class="btn-main" id="btnEntrar" type="submit">Entrar</button>
+    <div id="loginErro"></div>
+  </form>
+</section>
+
+<!-- ========== APP ========== -->
+<section id="app" class="hidden">
+  <div id="demoBar" class="demo hidden">Modo demonstração — dados de exemplo</div>
+  <header>
+    <div class="topline">
+      <div class="brand serif">MK Studio<small>gestão</small></div>
+      <div style="display:flex;gap:8px">
+        <button class="icon-btn" id="btnAtualizar" aria-label="Atualizar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button class="icon-btn" id="btnAjustes" aria-label="Ajustes">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="mes">
+      <button id="mesAnt" aria-label="Mês anterior">‹</button>
+      <div class="nome" id="mesNome">—</div>
+      <button id="mesProx" aria-label="Próximo mês">›</button>
+    </div>
+  </header>
+
+  <main id="tela"></main>
+
+  <nav class="tabs" id="abas">
+    <button data-aba="resumo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Resumo</button>
+    <button data-aba="contas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>Contas</button>
+    <button data-aba="entradas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14M6 11l6 6 6-6"/><path d="M4 21h16"/></svg>Entradas</button>
+    <button data-aba="equipe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.3 0 4 1.5 4.5 4"/></svg>Equipe</button>
+    <button data-aba="estoque"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>Estoque</button>
+  </nav>
+</section>
+
+<div id="overlay"></div>
+
+<script id="util">
+/* Funções simples de texto e dinheiro (testadas em tests/gestao-util.test.js) */
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function parseReais(s) {
+  let t = String(s == null ? '' : s).replace(/[^\d,.-]/g, '');
+  if (!/\d/.test(t)) return null;
+  if (t.indexOf(',') >= 0) t = t.replace(/\./g, '').replace(',', '.');
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, '');
+  const n = Number(t);
+  return isNaN(n) ? null : Math.round(n * 100) / 100;
+}
+
+function reais(n) {
+  const v = Math.round((Number(n) || 0) * 100) / 100;
+  const [int, dec] = Math.abs(v).toFixed(2).split('.');
+  return (v < 0 ? '-' : '') + int.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + dec;
+}
+
+function nomeMes(mes) {
+  const [a, m] = mes.split('-').map(Number);
+  return MESES[m - 1] + ' de ' + a;
+}
+
+function somaMes(mes, n) {
+  const [a, m] = mes.split('-').map(Number);
+  const t = a * 12 + (m - 1) + n;
+  return Math.floor(t / 12) + '-' + ('0' + (t % 12 + 1)).slice(-2);
+}
+</script>
+
+<script>
+/* =================== CONFIGURAÇÃO =================== */
+// Cole aqui o URL do App da Web do Apps Script da GESTÃO (termina em /exec).
+const API_URL = '';
+/* ==================================================== */
+
+const DEMO = !/^https:\/\/script\.google\.com\//.test(API_URL);
+const LS_KEY = 'mk-gestao-codigo';
+const CATEGORIAS = ['Material', 'Manutenção', 'Fixas', 'Outros'];
+const FORMAS = { pix: 'Pix', credito: 'Crédito', debito: 'Débito' };
+const DIAS_SEM = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const R = n => 'R$ ' + reais(n);
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+let codigo = '';
+const estado = { mes: '', dados: null, aba: 'resumo', abertos: {} };
+
+/* ---------------- comunicação ---------------- */
+function lerCodigo() { try { return localStorage.getItem(LS_KEY) || ''; } catch (e) { return ''; } }
+function salvarCodigo(c) { try { c ? localStorage.setItem(LS_KEY, c) : localStorage.removeItem(LS_KEY); } catch (e) {} }
+
+async function api(acao, extra = {}) {
+  const corpo = Object.assign({ codigo, acao, mes: estado.mes || undefined }, extra);
+  if (DEMO) return demoApi(corpo);
+  try {
+    const r = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo) });
+    const texto = await r.text();
+    try { return JSON.parse(texto); }
+    catch (e) { return { ok: false, erro: 'O servidor da gestão não respondeu direito. Confira o endereço do Apps Script.' }; }
+  } catch (e) {
+    return { ok: false, erro: 'Sem conexão. Confira a internet e tente de novo.' };
+  }
+}
+
+// Envia uma ação; se der certo, atualiza a tela com os dados que voltam.
+async function enviar(acao, extra, msgOk) {
+  $('#tela').classList.add('loading');
+  const r = await api(acao, extra);
+  $('#tela').classList.remove('loading');
+  if (!r.ok) { toast(r.erro || 'Algo deu errado.', true); return false; }
+  aplicar(r);
+  if (msgOk) toast(msgOk);
+  return true;
+}
+
+/* ---------------- login ---------------- */
+function mostrarLogin() { $('#app').classList.add('hidden'); $('#login').classList.remove('hidden'); $('#codigo').focus(); }
+function mostrarApp() { $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); $('#demoBar').classList.toggle('hidden', !DEMO); }
+
+$('#loginForm').onsubmit = async ev => {
+  ev.preventDefault();
+  codigo = $('#codigo').value.trim();
+  if (!codigo) return;
+  $('#btnEntrar').disabled = true; $('#btnEntrar').textContent = 'Entrando…'; $('#loginErro').textContent = '';
+  const r = await api('login');
+  $('#btnEntrar').disabled = false; $('#btnEntrar').textContent = 'Entrar';
+  if (!r.ok) { $('#loginErro').textContent = r.erro || 'Não foi possível entrar.'; return; }
+  salvarCodigo(codigo);
+  mostrarApp();
+  carregar();
+};
+
+function sair() { salvarCodigo(''); codigo = ''; estado.dados = null; fecharFolha(); mostrarLogin(); }
+
+/* ---------------- carregar ---------------- */
+async function carregar() {
+  $('#tela').classList.add('loading');
+  const r = await api('dados');
+  $('#tela').classList.remove('loading');
+  if (!r.ok) {
+    if (/código/i.test(r.erro || '')) { sair(); $('#loginErro').textContent = r.erro; return; }
+    toast(r.erro || 'Erro ao carregar.', true); return;
+  }
+  aplicar(r);
+}
+
+function aplicar(r) {
+  estado.dados = r;
+  estado.mes = r.mes;
+  $('#mesNome').textContent = cap(nomeMes(r.mes));
+  desenhar();
+}
+
+$('#mesAnt').onclick = () => { estado.mes = somaMes(estado.mes, -1); $('#mesNome').textContent = cap(nomeMes(estado.mes)); carregar(); };
+$('#mesProx').onclick = () => { estado.mes = somaMes(estado.mes, 1); $('#mesNome').textContent = cap(nomeMes(estado.mes)); carregar(); };
+$('#btnAtualizar').onclick = () => carregar();
+$('#btnAjustes').onclick = () => abrirAjustes();
+document.querySelectorAll('#abas button').forEach(b => b.onclick = () => { estado.aba = b.dataset.aba; desenhar(); window.scrollTo(0, 0); });
+
+function desenhar() {
+  document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('sel', b.dataset.aba === estado.aba));
+  if (!estado.dados) return;
+  const telas = { resumo: telaResumo, contas: telaContas, entradas: telaEntradas, equipe: telaEquipe, estoque: telaEstoque };
+  $('#tela').innerHTML = telas[estado.aba]();
+  ligar();
+}
+
+// Liga os cliques da tela atual (data-* nos elementos).
+function ligar() {
+  const d = estado.dados;
+  document.querySelectorAll('[data-abre]').forEach(el => el.onclick = () => {
+    estado.abertos[el.dataset.abre] = !estado.abertos[el.dataset.abre]; desenhar();
+  });
+  document.querySelectorAll('[data-conta]').forEach(el => el.onclick = () => abrirConta(d.contas.find(c => c.id === el.dataset.conta)));
+  document.querySelectorAll('[data-gasto]').forEach(el => el.onclick = () => abrirGasto(d.avulsos.find(g => g.id === el.dataset.gasto)));
+  document.querySelectorAll('[data-novo-gasto]').forEach(el => el.onclick = () => abrirGasto(null));
+  document.querySelectorAll('[data-sala]').forEach(el => el.onclick = () => {
+    const a = d.alugueis.find(x => x.salaId === el.dataset.sala);
+    enviar('aluguel', { salaId: a.salaId, recebido: !a.recebido }, a.recebido ? null : 'Aluguel recebido');
+  });
+  document.querySelectorAll('[data-pagar]').forEach(el => el.onclick = () => {
+    const [s, nome] = el.dataset.pagar.split('|');
+    abrirPagar(d.semanas.find(x => x.semana === s), nome);
+  });
+  document.querySelectorAll('[data-desfazer]').forEach(el => el.onclick = () => {
+    const [s, nome] = el.dataset.desfazer.split('|');
+    abrirDesfazer(d.semanas.find(x => x.semana === s), nome);
+  });
+  document.querySelectorAll('[data-mais],[data-menos]').forEach(el => el.onclick = () => ajustar(el.dataset.mais || el.dataset.menos, el.dataset.mais ? 1 : -1));
+  document.querySelectorAll('[data-item]').forEach(el => el.onclick = () => abrirItem(d.estoque.find(i => i.id === el.dataset.item)));
+  document.querySelectorAll('[data-novo-item]').forEach(el => el.onclick = () => abrirItem(null));
+}
+
+/* ================== RESUMO ================== */
+function telaResumo() {
+  const d = estado.dados, r = d.resumo, ab = estado.abertos;
+  const linha = (rot, v) => `<div><span>${rot}</span><b class="num">${R(v)}</b></div>`;
+  const seta = k => `<span class="chev">${ab[k] ? 'fechar ▴' : 'detalhes ▾'}</span>`;
+  let h = `<div class="big in" data-abre="in"><div class="lbl">Entrou ${seta('in')}</div><div class="v num"><small>R$</small>${reais(r.entrou.total)}</div>
+    ${ab.in ? `<div class="det">${linha('Atendimentos', r.entrou.atendimentos)}${linha('Aluguel das salas', r.entrou.alugueis)}</div>` : ''}</div>
+  <div class="big out" data-abre="out"><div class="lbl">Saiu ${seta('out')}</div><div class="v num"><small>R$</small>${reais(r.saiu.total)}</div>
+    ${ab.out ? `<div class="det">${linha('Contas', r.saiu.contas)}${linha('Material', r.saiu.material)}${linha('Profissionais', r.saiu.profissionais)}${linha('Taxas da maquininha', r.saiu.taxas)}</div>` : ''}</div>
+  <div class="big net${r.sobrou < 0 ? ' neg' : ''}"><div class="lbl">Sobrou</div><div class="v num"><small>R$</small>${reais(r.sobrou)}</div></div>`;
+  h += `<h2>Últimos meses</h2>${grafico(d.historico)}`;
+  const aPagar = d.contas.filter(c => !c.lanc || !c.lanc.pago).length + d.avulsos.filter(a => !a.pago).length;
+  const comprar = d.estoque.filter(i => i.quantidade <= i.minimo).length;
+  const semPagar = d.semanas.reduce((t, s) => t + s.profissionais.filter(p => !p.pago && p.devido > 0 && s.domingo < d.hoje).length, 0);
+  const avisos = [];
+  if (aPagar) avisos.push(`<div class="card tap row" onclick="irPara('contas')"><div class="t">${aPagar} ${aPagar === 1 ? 'conta' : 'contas'} a pagar neste mês</div><span class="pill no">ver</span></div>`);
+  if (semPagar) avisos.push(`<div class="card tap row" onclick="irPara('equipe')"><div class="t">${semPagar} ${semPagar === 1 ? 'acerto' : 'acertos'} de semana pendente</div><span class="pill no">ver</span></div>`);
+  if (comprar) avisos.push(`<div class="card tap row" onclick="irPara('estoque')"><div class="t">${comprar} ${comprar === 1 ? 'item' : 'itens'} para comprar</div><span class="pill no">ver</span></div>`);
+  if (avisos.length) h += `<h2>Pendências</h2>` + avisos.join('');
+  return h;
+}
+
+function irPara(aba) { estado.aba = aba; desenhar(); window.scrollTo(0, 0); }
+
+function grafico(hist) {
+  if (!hist.length) return `<div class="empty">Ainda sem meses anteriores.</div>`;
+  const W = 340, H = 170, base = 140, topo = 14;
+  const max = Math.max(1, ...hist.map(m => Math.max(m.entrou, m.saiu)));
+  const larg = W / hist.length;
+  const bw = Math.min(22, larg / 3);
+  const y = v => base - (v / max) * (base - topo);
+  let s = `<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="#e3dbd1"/>`;
+  hist.forEach((m, i) => {
+    const cx = larg * i + larg / 2;
+    s += `<rect x="${cx - bw - 1}" y="${y(m.entrou)}" width="${bw}" height="${base - y(m.entrou)}" rx="4" fill="#2f7a4f"><title>Entrou ${R(m.entrou)}</title></rect>`;
+    s += `<rect x="${cx + 1}" y="${y(m.saiu)}" width="${bw}" height="${base - y(m.saiu)}" rx="4" fill="#c9705c"><title>Saiu ${R(m.saiu)}</title></rect>`;
+    s += `<text x="${cx}" y="${base + 20}" text-anchor="middle" font-size="13" fill="#6f645b">${MESES[Number(m.mes.slice(5)) - 1].slice(0, 3)}</text>`;
+  });
+  return `<div class="chart"><div class="legend"><span><i style="background:#2f7a4f"></i>Entrou</span><span><i style="background:#c9705c"></i>Saiu</span></div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Entradas e saídas dos últimos meses">${s}</svg></div>`;
+}
+
+/* ================== CONTAS ================== */
+function telaContas() {
+  const d = estado.dados;
+  const pago = d.contas.reduce((t, c) => t + (c.lanc && c.lanc.pago ? c.lanc.valor : 0), 0) + d.avulsos.reduce((t, a) => t + (a.pago ? a.valor : 0), 0);
+  const aPagar = d.contas.reduce((t, c) => t + (c.lanc && !c.lanc.pago ? c.lanc.valor : 0), 0) + d.avulsos.reduce((t, a) => t + (a.pago ? 0 : a.valor), 0);
+  let h = `<div class="card"><div class="row"><div><div class="s">Pago no mês</div><div class="val num" style="color:var(--ok)">${R(pago)}</div></div>
+    <div style="text-align:right"><div class="s">A pagar</div><div class="val num" style="color:var(--warn)">${R(aPagar)}</div></div></div></div>`;
+  h += `<h2>Contas do mês</h2>`;
+  if (!d.contas.length) h += `<div class="empty">Nenhuma conta fixa cadastrada. Cadastre em Ajustes (⚙︎).</div>`;
+  d.contas.forEach(c => {
+    const st = !c.lanc ? '<span class="pill mut">lançar valor</span>' : c.lanc.pago ? '<span class="pill ok">Pago</span>' : '<span class="pill no">A pagar</span>';
+    h += `<div class="card tap row" data-conta="${esc(c.id)}"><div><div class="t">${esc(c.nome)}</div><div class="s">${c.lanc ? R(c.lanc.valor) : 'sem valor ainda'}</div></div>${st}</div>`;
+  });
+  h += `<h2>Outros gastos</h2>`;
+  d.avulsos.forEach(a => {
+    h += `<div class="card tap row" data-gasto="${esc(a.id)}"><div><div class="t">${esc(a.descricao)}</div><div class="s">${esc(a.categoria)} · ${dataCurta(a.data)}</div></div>
+      <div style="text-align:right"><div class="val num">${R(a.valor)}</div>${a.pago ? '' : '<span class="pill no">A pagar</span>'}</div></div>`;
+  });
+  h += `<button class="add" data-novo-gasto>+ gasto</button>`;
+  return h;
+}
+
+function abrirConta(c) {
+  let pago = c.lanc ? c.lanc.pago : true;
+  abrirFolha(`<h3>${esc(c.nome)}</h3><p>${esc(nomeMes(estado.mes))}</p>
+    <label>Valor da conta</label>
+    <div class="field money" id="fV"><span>R$</span><input id="valor" inputmode="decimal" placeholder="0,00" value="${c.lanc ? reais(c.lanc.valor) : ''}"></div>
+    <div class="erro" id="eV"></div>
+    <div class="seg" id="segPago"><button data-p="0" class="no">A pagar</button><button data-p="1" class="ok">Pago</button></div>
+    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-dark" id="ok">Salvar</button></div>
+    <a class="link" href="#" id="verHist">Ver histórico desta conta</a><div id="hist"></div>`);
+  const seg = () => document.querySelectorAll('#segPago button').forEach(b => b.classList.toggle('sel', (b.dataset.p === '1') === pago));
+  seg();
+  document.querySelectorAll('#segPago button').forEach(b => b.onclick = () => { pago = b.dataset.p === '1'; seg(); });
+  if (!c.lanc) $('#valor').focus();
+  $('#ok').onclick = async () => {
+    const v = lerValor('#valor', '#fV', '#eV'); if (v == null) return;
+    $('#ok').disabled = true;
+    if (await enviar('lancar', { lancamento: { contaId: c.id, valor: v, pago } }, 'Conta salva')) fecharFolha();
+    else $('#ok').disabled = false;
+  };
+  $('#verHist').onclick = async ev => {
+    ev.preventDefault();
+    $('#hist').innerHTML = '<p>Carregando…</p>';
+    const r = await api('historicoConta', { id: c.id });
+    if (!r.ok) { $('#hist').innerHTML = `<p>${esc(r.erro)}</p>`; return; }
+    $('#hist').innerHTML = r.historico.length
+      ? `<h4>Histórico</h4><div class="hist">${r.historico.map(x => `<div><span>${esc(cap(nomeMes(x.mes)))}</span><span class="num">${R(x.valor)} ${x.pago ? '' : '<span class="pill no">a pagar</span>'}</span></div>`).join('')}</div>`
+      : '<p>Ainda sem valores lançados.</p>';
+  };
+}
+
+function abrirGasto(g) {
+  let cat = g ? g.categoria : 'Material', pago = g ? g.pago : true;
+  abrirFolha(`<h3>${g ? 'Editar gasto' : 'Novo gasto'}</h3><p>${esc(nomeMes(estado.mes))}</p>
+    <label>Descrição</label>
+    <div class="field" id="fD"><input id="desc" placeholder="Ex.: esmaltes, conserto da cadeira" value="${g ? esc(g.descricao) : ''}"></div>
+    <div class="erro" id="eD"></div>
+    <label>Categoria</label>
+    <div class="chips" id="cats">${CATEGORIAS.map(c => `<button data-c="${c}">${c}</button>`).join('')}</div>
+    <label>Valor</label>
+    <div class="field money" id="fV"><span>R$</span><input id="valor" inputmode="decimal" placeholder="0,00" value="${g ? reais(g.valor) : ''}"></div>
+    <div class="erro" id="eV"></div>
+    <div class="seg" id="segPago"><button data-p="0" class="no">A pagar</button><button data-p="1" class="ok">Pago</button></div>
+    <div class="btns">${g ? '<button class="b-red" id="apagar">Apagar</button>' : '<button class="b-ghost" data-x>Cancelar</button>'}<button class="b-dark" id="ok">Salvar</button></div>`);
+  const marca = () => {
+    document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('sel', b.dataset.c === cat));
+    document.querySelectorAll('#segPago button').forEach(b => b.classList.toggle('sel', (b.dataset.p === '1') === pago));
+  };
+  marca();
+  document.querySelectorAll('#cats button').forEach(b => b.onclick = () => { cat = b.dataset.c; marca(); });
+  document.querySelectorAll('#segPago button').forEach(b => b.onclick = () => { pago = b.dataset.p === '1'; marca(); });
+  if (!g) $('#desc').focus();
+  $('#ok').onclick = async () => {
+    const desc = $('#desc').value.trim();
+    $('#fD').classList.toggle('err', !desc); $('#eD').textContent = desc ? '' : 'Escreva o que foi comprado ou pago.';
+    const v = lerValor('#valor', '#fV', '#eV');
+    if (!desc || v == null) return;
+    $('#ok').disabled = true;
+    const lanc = { id: g ? g.id : undefined, descricao: desc, categoria: cat, valor: v, pago, data: g ? g.data : undefined };
+    if (await enviar('lancar', { lancamento: lanc }, 'Gasto salvo')) fecharFolha();
+    else $('#ok').disabled = false;
+  };
+  if (g) $('#apagar').onclick = () => confirmar('Apagar este gasto?', `${esc(g.descricao)} · ${R(g.valor)}`, 'Apagar',
+    async () => enviar('apagarLancamento', { id: g.id }, 'Gasto apagado'));
+}
+
+/* ================== ENTRADAS ================== */
+function telaEntradas() {
+  const d = estado.dados, e = d.entradas;
+  let h = `<h2>Salas de estética</h2>`;
+  if (!d.alugueis.length) h += `<div class="empty">Nenhuma sala ocupada neste mês.</div>`;
+  d.alugueis.forEach(a => {
+    h += `<div class="card row"><div><div class="t">${esc(a.nome)}</div><div class="s num">${R(a.valor)} por mês</div></div>
+      <button class="toggle ${a.recebido ? 'on' : 'off'}" data-sala="${esc(a.salaId)}">${a.recebido ? '✓ Recebido' : 'Marcar recebido'}</button></div>`;
+  });
+  const soma = f => e.reduce((t, x) => t + x[f], 0);
+  h += `<h2>Atendimentos</h2>
+    <div class="card tot"><div><span>Valor cobrado (${e.length})</span><b class="num">${R(soma('valor'))}</b></div>
+    <div><span>Parte das profissionais</span><span class="num">− ${R(soma('parteProf'))}</span></div>
+    <div><span>Taxas da maquininha</span><span class="num">− ${R(soma('taxa'))}</span></div>
+    <div class="l"><span>Fica para o salão</span><span class="num">${R(soma('liquido'))}</span></div></div>`;
+  if (!e.length) return h + `<div class="empty">Nenhum atendimento feito neste mês.</div>`;
+  const dias = {};
+  e.forEach(x => { (dias[x.data] = dias[x.data] || []).push(x); });
+  Object.keys(dias).sort().reverse().forEach(dia => {
+    const lista = dias[dia];
+    h += `<div class="dia">${diaLongo(dia)} · ${R(lista.reduce((t, x) => t + x.valor, 0))}</div><div class="card">`;
+    lista.forEach(x => {
+      h += `<div class="at"><div><div class="t">${esc(x.cliente)}</div><div class="s">${esc(x.servico)} · ${esc(x.profissional)}</div>
+        <span class="badge">${FORMAS[x.pagamento] || 'sem forma'}</span></div><div class="val num">${R(x.valor)}</div></div>`;
+    });
+    h += `</div>`;
+  });
+  return h;
+}
+
+/* ================== EQUIPE ================== */
+function telaEquipe() {
+  const d = estado.dados;
+  let h = `<h2>Acerto semanal</h2><p class="muted" style="margin:-4px 2px 12px">Cada profissional recebe ${Math.round(d.config.comissao * 100)}% do valor dos atendimentos feitos de segunda a domingo.</p>`;
+  if (!d.semanas.length) return h + `<div class="empty">Nenhuma semana desde o início do app.</div>`;
+  d.semanas.forEach(s => {
+    const atual = s.semana <= d.hoje && d.hoje <= s.domingo;
+    h += `<div class="card wk"><h3><span>${periodo(s.semana, s.domingo)}</span>${atual ? '<span class="pill mut">esta semana</span>' : ''}</h3>`;
+    s.profissionais.forEach(p => {
+      const chave = esc(s.semana + '|' + p.nome);
+      let acao;
+      if (p.pago) acao = `<div style="text-align:right"><span class="pill ok">Pago em ${dataCurta(p.pagoEm)}</span><br><button class="undo" data-desfazer="${chave}">desfazer</button></div>`;
+      else if (p.devido <= 0) acao = `<span class="pill mut">nada a pagar</span>`;
+      else acao = `<button class="pay-btn" data-pagar="${chave}">Marcar como pago</button>`;
+      h += `<div class="prof"><div class="row"><div><div class="t">${esc(p.nome)}</div><div class="val num">${R(p.pago ? p.valorPago : p.devido)}</div></div>${acao}</div>`;
+      if (p.pago && p.diferenca) {
+        h += `<div class="warn">${p.diferenca > 0
+          ? `Depois do pagamento entraram mais atendimentos: falta pagar <b>${R(p.diferenca)}</b>.`
+          : `Depois do pagamento um atendimento saiu: foi pago <b>${R(-p.diferenca)}</b> a mais.`}</div>`;
+      }
+      h += `</div>`;
+    });
+    h += `</div>`;
+  });
+  return h;
+}
+
+function abrirPagar(s, nome) {
+  const p = s.profissionais.find(x => x.nome === nome);
+  confirmar(`Pagar ${esc(nome)}`, `Semana de ${periodo(s.semana, s.domingo)}<br><b style="font-size:26px;color:var(--ink)" class="num">${R(p.devido)}</b>`, 'Marcar como pago',
+    async () => enviar('pagarSemana', { semana: s.semana, profissional: nome, valor: p.devido, pago: true }, 'Pagamento registrado'), 'b-dark');
+}
+
+function abrirDesfazer(s, nome) {
+  confirmar('Desfazer pagamento?', `${esc(nome)} · semana de ${periodo(s.semana, s.domingo)}. A semana volta a aparecer como não paga.`, 'Desfazer',
+    async () => enviar('pagarSemana', { semana: s.semana, profissional: nome, pago: false }, 'Pagamento desfeito'));
+}
+
+/* ================== ESTOQUE ================== */
+function telaEstoque() {
+  const d = estado.dados;
+  const baixos = d.estoque.filter(i => i.quantidade <= i.minimo);
+  let h = baixos.length
+    ? `<div class="comprar"><b>Comprar</b>${baixos.map(i => `<div>• ${esc(i.item)} <span class="num">(${i.quantidade} de mínimo ${i.minimo})</span></div>`).join('')}</div>`
+    : `<div class="comprar vazio"><b>Comprar</b>Nada para comprar agora.</div>`;
+  h += `<h2>Materiais</h2>`;
+  if (!d.estoque.length) h += `<div class="empty">Cadastre os materiais que o salão usa.</div>`;
+  d.estoque.forEach(i => {
+    h += `<div class="card row${i.quantidade <= i.minimo ? ' low' : ''}"><div class="tap" data-item="${esc(i.id)}" style="flex:1">
+      <div class="t">${esc(i.item)}</div><div class="s">mínimo ${i.minimo} ${esc(i.unidade)} · tocar para editar</div></div>
+      <div class="qty"><button data-menos="${esc(i.id)}" aria-label="Tirar um">−</button><span class="n num">${i.quantidade}</span><button data-mais="${esc(i.id)}" aria-label="Pôr um">+</button></div></div>`;
+  });
+  h += `<button class="add" data-novo-item>+ item</button>`;
+  return h;
+}
+
+let filaEstoque = Promise.resolve();
+function ajustar(id, delta) {
+  const it = estado.dados.estoque.find(i => i.id === id);
+  if (!it || (delta < 0 && it.quantidade <= 0)) return;
+  it.quantidade += delta;                                  // mostra na hora; o servidor confirma depois
+  desenhar();
+  filaEstoque = filaEstoque.then(async () => {
+    const r = await api('ajusteEstoque', { id, delta });
+    if (!r.ok) { toast(r.erro || 'Não foi possível salvar.', true); carregar(); return; }
+    estado.dados.estoque = r.estoque;
+    estado.dados.resumo = r.resumo;
+  });
+}
+
+function abrirItem(i) {
+  abrirFolha(`<h3>${i ? 'Editar item' : 'Novo item'}</h3>
+    <label>Material</label><div class="field" id="fN"><input id="nome" placeholder="Ex.: acetona" value="${i ? esc(i.item) : ''}"></div><div class="erro" id="eN"></div>
+    <label>Unidade</label><div class="field"><input id="uni" placeholder="Ex.: frascos, pacotes" value="${i ? esc(i.unidade) : ''}"></div>
+    <div style="display:flex;gap:10px"><div style="flex:1"><label>Quantidade agora</label><div class="field"><input id="qtd" inputmode="numeric" value="${i ? i.quantidade : ''}" placeholder="0"></div></div>
+    <div style="flex:1"><label>Avisar quando chegar a</label><div class="field"><input id="min" inputmode="numeric" value="${i ? i.minimo : ''}" placeholder="0"></div></div></div>
+    <div class="btns">${i ? '<button class="b-red" id="apagar">Apagar</button>' : '<button class="b-ghost" data-x>Cancelar</button>'}<button class="b-dark" id="ok">Salvar</button></div>`);
+  if (!i) $('#nome').focus();
+  $('#ok').onclick = async () => {
+    const nome = $('#nome').value.trim();
+    $('#fN').classList.toggle('err', !nome); $('#eN').textContent = nome ? '' : 'Escreva o nome do material.';
+    if (!nome) return;
+    $('#ok').disabled = true;
+    const item = { id: i ? i.id : undefined, item: nome, unidade: $('#uni').value.trim(),
+      quantidade: Math.max(0, parseInt($('#qtd').value, 10) || 0), minimo: Math.max(0, parseInt($('#min').value, 10) || 0) };
+    if (await enviar('salvarItem', { item }, 'Item salvo')) fecharFolha();
+    else $('#ok').disabled = false;
+  };
+  if (i) $('#apagar').onclick = () => confirmar('Apagar este item?', esc(i.item), 'Apagar', async () => enviar('apagarItem', { id: i.id }, 'Item apagado'));
+}
+
+/* ================== AJUSTES ================== */
+function abrirAjustes() {
+  const d = estado.dados; if (!d) return;
+  const tx = d.config.taxas;
+  abrirFolha(`<h3>Ajustes</h3>
+    <h4>Taxas da maquininha</h4><p>Porcentagem cobrada em cada forma de pagamento. Sai só da parte do salão.</p>
+    ${Object.keys(FORMAS).map(k => `<label>${FORMAS[k]}</label><div class="field"><input id="tx_${k}" inputmode="decimal" value="${String(tx[k]).replace('.', ',')}"><span>%</span></div>`).join('')}
+    <div class="btns" style="margin-top:12px"><button class="b-dark" id="okTaxas">Salvar taxas</button></div>
+
+    <h4>Salas de estética</h4>
+    ${d.salas.map(s => `<div class="sala"><div class="row"><div class="t">${esc(s.nome)}</div>
+      <div class="seg" style="margin:0;min-width:190px" data-segsala="${esc(s.id)}"><button data-o="1" class="ok${s.ocupada ? ' sel' : ''}">Ocupada</button><button data-o="0" class="no${s.ocupada ? '' : ' sel'}">Livre</button></div></div>
+      <label>Aluguel por mês</label><div class="field money"><span>R$</span><input data-valsala="${esc(s.id)}" inputmode="decimal" value="${reais(s.valor)}"></div></div>`).join('')}
+
+    <h4>Contas fixas</h4><p>Aparecem todo mês na aba Contas para lançar o valor.</p>
+    <div id="listaContas">${d.cadastroContas.map(c => `<div class="card tap row" data-cad="${esc(c.id)}" style="margin-bottom:8px"><div><div class="t">${esc(c.nome)}</div><div class="s">${esc(c.categoria)}</div></div>
+      <span class="pill ${c.ativa ? 'ok' : 'mut'}">${c.ativa ? 'ativa' : 'desativada'}</span></div>`).join('') || '<p>Nenhuma ainda.</p>'}</div>
+    <button class="add" id="novaConta">+ conta fixa</button>
+
+    <div class="btns"><button class="b-ghost" data-x>Fechar</button></div>
+    <a class="link" href="#" id="sair">Sair deste aparelho</a>`);
+
+  $('#okTaxas').onclick = async () => {
+    const taxas = {};
+    for (const k of Object.keys(FORMAS)) {
+      const v = parseReais($('#tx_' + k).value);
+      if (v == null || v < 0 || v > 30) { toast(`Taxa do ${FORMAS[k]} inválida.`, true); return; }
+      taxas[k] = v;
+    }
+    if (await enviar('config', { taxas }, 'Taxas salvas')) abrirAjustes();
+  };
+  const salvarSala = async (id, mudanca) => {
+    const s = estado.dados.salas.find(x => x.id === id);
+    const nova = Object.assign({}, s, mudanca);
+    if (await enviar('salvarSala', { sala: nova }, nova.ocupada === s.ocupada ? 'Valor salvo' : (nova.ocupada ? 'Sala ocupada' : 'Sala livre'))) abrirAjustes();
+  };
+  document.querySelectorAll('[data-segsala] button').forEach(b => b.onclick = () =>
+    salvarSala(b.parentNode.dataset.segsala, { ocupada: b.dataset.o === '1' }));
+  document.querySelectorAll('[data-valsala]').forEach(inp => inp.onchange = () => {
+    const v = parseReais(inp.value);
+    if (v == null || v < 0) { toast('Valor inválido.', true); return; }
+    salvarSala(inp.dataset.valsala, { valor: v });
+  });
+  document.querySelectorAll('[data-cad]').forEach(el => el.onclick = () => abrirCadastroConta(d.cadastroContas.find(c => c.id === el.dataset.cad)));
+  $('#novaConta').onclick = () => abrirCadastroConta(null);
+  $('#sair').onclick = ev => { ev.preventDefault(); sair(); };
+}
+
+function abrirCadastroConta(c) {
+  let cat = c ? c.categoria : 'Fixas', ativa = c ? c.ativa : true;
+  abrirFolha(`<h3>${c ? 'Editar conta' : 'Nova conta fixa'}</h3>
+    <label>Nome</label><div class="field" id="fN"><input id="nome" placeholder="Ex.: luz, água, internet" value="${c ? esc(c.nome) : ''}"></div><div class="erro" id="eN"></div>
+    <label>Categoria</label><div class="chips" id="cats">${CATEGORIAS.map(x => `<button data-c="${x}">${x}</button>`).join('')}</div>
+    <label>Situação</label><div class="seg" id="segAt"><button data-a="1" class="ok">Ativa</button><button data-a="0" class="no">Desativada</button></div>
+    <div class="btns"><button class="b-ghost" id="voltar">Voltar</button><button class="b-dark" id="ok">Salvar</button></div>`);
+  const marca = () => {
+    document.querySelectorAll('#cats button').forEach(b => b.classList.toggle('sel', b.dataset.c === cat));
+    document.querySelectorAll('#segAt button').forEach(b => b.classList.toggle('sel', (b.dataset.a === '1') === ativa));
+  };
+  marca();
+  document.querySelectorAll('#cats button').forEach(b => b.onclick = () => { cat = b.dataset.c; marca(); });
+  document.querySelectorAll('#segAt button').forEach(b => b.onclick = () => { ativa = b.dataset.a === '1'; marca(); });
+  $('#voltar').onclick = () => abrirAjustes();
+  if (!c) $('#nome').focus();
+  $('#ok').onclick = async () => {
+    const nome = $('#nome').value.trim();
+    $('#fN').classList.toggle('err', !nome); $('#eN').textContent = nome ? '' : 'Escreva o nome da conta.';
+    if (!nome) return;
+    $('#ok').disabled = true;
+    if (await enviar('salvarConta', { conta: { id: c ? c.id : undefined, nome, categoria: cat, fixa: true, ativa } }, 'Conta salva')) abrirAjustes();
+    else $('#ok').disabled = false;
+  };
+}
+
+/* ---------------- folha, confirmação e avisos ---------------- */
+function abrirFolha(html) {
+  $('#overlay').innerHTML = `<div class="scrim"><div class="sheet" role="dialog">${html}</div></div>`;
+  $('.scrim').onclick = ev => { if (ev.target.classList.contains('scrim')) fecharFolha(); };
+  document.querySelectorAll('[data-x]').forEach(b => b.onclick = fecharFolha);
+}
+function fecharFolha() { $('#overlay').innerHTML = ''; }
+
+function confirmar(titulo, texto, rotulo, acao, classe = 'b-red') {
+  abrirFolha(`<h3>${titulo}</h3><p>${texto}</p>
+    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="${classe}" id="okConf">${rotulo}</button></div>`);
+  $('#okConf').onclick = async () => {
+    $('#okConf').disabled = true;
+    if (await acao()) fecharFolha(); else $('#okConf').disabled = false;
+  };
+}
+
+function lerValor(sel, campo, erro) {
+  const v = parseReais($(sel).value);
+  const ok = v != null && v >= 0;
+  $(campo).classList.toggle('err', !ok);
+  $(erro).textContent = ok ? '' : 'Digite um valor, por exemplo 150,00.';
+  return ok ? v : null;
+}
+
+let tToast;
+function toast(msg, erro) {
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = document.createElement('div');
+  t.className = 'toast' + (erro ? ' err' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(tToast); tToast = setTimeout(() => t.remove(), erro ? 4500 : 2200);
+}
+
+/* ---------------- datas ---------------- */
+function dataCurta(iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : ''; }
+function diaLongo(iso) {
+  const d = new Date(iso + 'T12:00:00Z');
+  return cap(DIAS_SEM[d.getUTCDay()]) + ', ' + Number(iso.slice(8, 10)) + ' de ' + MESES[Number(iso.slice(5, 7)) - 1].slice(0, 3);
+}
+function periodo(ini, fim) {
+  const m1 = MESES[Number(ini.slice(5, 7)) - 1].slice(0, 3), m2 = MESES[Number(fim.slice(5, 7)) - 1].slice(0, 3);
+  return Number(ini.slice(8, 10)) + (m1 === m2 ? '' : ' de ' + m1) + ' a ' + Number(fim.slice(8, 10)) + ' de ' + m2;
+}
+
+/* ---------------- modo demonstração ---------------- */
+// Roda o servidor de verdade (Codigo.gs + calculos.gs) no navegador, com uma planilha de exemplo.
+let demoServidor = null;
+async function demoApi(corpo) {
+  if (!demoServidor) {
+    const ler = async f => (await fetch(f)).text();
+    const codigoGs = (await ler('../mk-gestao-app/calculos.gs')) + '\n;\n' + (await ler('../mk-gestao-app/Codigo.gs'));
+    await new Promise((ok, erro) => { const s = document.createElement('script'); s.src = 'demo.js'; s.onload = ok; s.onerror = erro; document.head.appendChild(s); });
+    demoServidor = MKDemo.servidor(codigoGs, MKDemo.fake(MKDemo.exemplo()));
+  }
+  await new Promise(r => setTimeout(r, 200));
+  const r = demoServidor.doPost({ postData: { contents: JSON.stringify(corpo) } });
+  return JSON.parse(r.conteudo);
+}
+
+/* ---------------- início ---------------- */
+if ('serviceWorker' in navigator && !DEMO) navigator.serviceWorker.register('sw.js').catch(() => {});
+codigo = lerCodigo();
+if (codigo) { mostrarApp(); carregar(); } else mostrarLogin();
+</script>
+</body>
+</html>

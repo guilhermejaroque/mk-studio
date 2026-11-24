@@ -127,3 +127,24 @@ test('agenda sem coluna Pagamento ainda calcula entradas com taxa 0', () => {
   assert.equal(d.entradas.length, 1);
   assert.equal(d.entradas[0].taxa, 0);
 });
+
+test('conta desativada sai da lista do mês mas continua no cadastro', () => {
+  const { p } = novo();
+  p('dados');
+  const id = p('salvarConta', { conta: { nome: 'Luz', categoria: 'Fixas', fixa: true, ativa: true } }).contas[0].id;
+  const d = p('salvarConta', { conta: { id, nome: 'Luz', categoria: 'Fixas', fixa: true, ativa: false } });
+  assert.equal(d.contas.length, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(d.cadastroContas)), [{ id, nome: 'Luz', categoria: 'Fixas', fixa: true, ativa: false }]);
+});
+
+test('dados de exemplo do modo demonstração funcionam no servidor de verdade', () => {
+  const { exemplo } = require('../gestao/demo.js');
+  const g = fake(exemplo('2026-11-25'), { hoje: '2026-11-25' });
+  const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
+  const d = post(fns, { codigo: 'DonoMK', acao: 'dados' });
+  assert.equal(d.ok, true);
+  assert.ok(d.entradas.length > 10);
+  assert.equal(d.semanas.length, 3);
+  assert.equal(d.contas.length, 4);
+  assert.equal(d.estoque[0].item, 'Acetona');
+});
