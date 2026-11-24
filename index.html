@@ -264,7 +264,7 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
           <h3>Agendamento confirmado</h3>
           <dl class="sum" id="doneSum"></dl>
           <button class="btn line" id="again" type="button">Fazer outro agendamento</button>
-          <p class="note">Protótipo: nesta prévia o agendamento fica só na sua tela. No site publicado ele vai direto para a agenda do salão.</p>
+          <p class="note" id="demoDone">Prévia de demonstração: este agendamento não foi gravado.</p>
         </div>
       </aside>
     </div>
@@ -495,7 +495,7 @@ $("again").addEventListener("click", () => { $("form").reset(); $("doneView").hi
 const bo = new IntersectionObserver(es => es.forEach(x => $("bar").classList.toggle("on", x.isIntersecting)), { threshold: .05 });
 bo.observe($("agendamento"));
 
-if (API) $("demoNote").hidden = true;
+if (API) { $("demoNote").hidden = true; $("demoDone").remove(); }
 all();
 load();
 }
