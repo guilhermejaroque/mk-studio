@@ -44,3 +44,11 @@ test('não feito e desfazer limpam a forma de pagamento', () => {
   p({ execucao: 'nao_feito' });
   assert.equal(ag.linhas[1][col('Pagamento')], '');
 });
+
+test('final: página antiga sem forma de pagamento ainda consegue marcar feito', () => {
+  const { ag, col, p } = novo();
+  const r = p({ execucao: 'feito', valorCheio: 100 });
+  assert.equal(r.ok, true);
+  assert.equal(ag.linhas[1][col('Execução')], 'feito');
+  assert.equal(ag.linhas[1][col('Pagamento')], '');
+});

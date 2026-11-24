@@ -133,7 +133,8 @@ function marcar_(prof, req) {
       return { ok: false, erro: 'Esse horário já foi agendado por outra cliente pelo site.' };
     }
     const pagamento = String(req.pagamento || '').trim().toLowerCase();
-    if (FORMAS_PAGAMENTO.indexOf(pagamento) < 0) return { ok: false, erro: 'Escolha Pix, Crédito ou Débito.' };
+    // vazio = página antiga do app, ainda sem os botões (fica sem taxa)
+    if (pagamento && FORMAS_PAGAMENTO.indexOf(pagamento) < 0) return { ok: false, erro: 'Escolha Pix, Crédito ou Débito.' };
     const valor = numero_(req.valorCheio);
     set('Execução', EXEC_FEITO);
     set('Pagamento', pagamento);
@@ -326,6 +327,7 @@ function normHora_(v) {
 function numero_(v) {
   if (v === '' || v == null) return null;
   if (typeof v === 'number') return v;
+  if (!/\d/.test(String(v))) return null;
   const n = Number(String(v).replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.'));
   return isNaN(n) ? null : n;
 }

@@ -67,7 +67,7 @@ function doPost(e) {
 function dados_(mes) {
   const hoje = hojeISO_();
   const cfg = lerConfig_();
-  const agenda = lerAgenda_();
+  const agenda = lerAgenda_().filter(r => r.data >= cfg.inicio);   // nada antes do início do app
   const profs = equipe_();
   const lanc = lancamentos_();
   const alug = alugueisTodos_();
@@ -100,7 +100,7 @@ function dados_(mes) {
   const mesAtual = mesDe(hoje);
   const alugueis = salas.map(s => {
     const a = alug.find(x => x.mes === mes && x.salaId === s.id);
-    if (!a && !(s.ocupada && mes >= mesAtual)) return null;
+    if (!a && !(s.ocupada && mes >= (s.desde || mesAtual))) return null;
     return { salaId: s.id, nome: s.nome, valor: a ? a.valor : s.valor, recebido: a ? a.recebido : false };
   }).filter(Boolean);
 
@@ -189,7 +189,8 @@ function alugueisTodos_() {
 
 function salas_() {
   return tabela_('Salas').linhas.map(r => ({
-    id: String(r['ID']), nome: String(r['Nome']), valor: numero_(r['Valor mensal']) || 0, ocupada: simNao_(r['Ocupada'])
+    id: String(r['ID']), nome: String(r['Nome']), valor: numero_(r['Valor mensal']) || 0, ocupada: simNao_(r['Ocupada']),
+    desde: normMes_(r['Desde'])
   }));
 }
 
@@ -247,11 +248,23 @@ function salvarSala_(req) {
   if (!atual) return { ok: false, erro: 'Sala não encontrada.' };
   const valor = numero_(s.valor);
   const ocupada = !!s.ocupada;
+  if (!ocupada && simNao_(atual['Ocupada'])) guardaMesesOcupados_(String(s.id), normMes_(atual['Desde']), numero_(atual['Valor mensal']) || 0);
   upsert_('Salas', r => String(r['ID']) === String(s.id), {
     'ID': s.id, 'Nome': String(s.nome || atual['Nome']), 'Valor mensal': valor == null ? numero_(atual['Valor mensal']) : valor,
     'Ocupada': sn_(ocupada),
     'Desde': ocupada && !simNao_(atual['Ocupada']) ? texto_(mesDe(hojeISO_())) : (atual['Desde'] || '')
   });
+}
+
+// Ao liberar uma sala, grava (como não recebido) os meses ocupados até o atual que ainda
+// não têm linha em Aluguéis, para eles continuarem aparecendo no histórico.
+function guardaMesesOcupados_(salaId, desde, valor) {
+  const atual = mesDe(hojeISO_());
+  const tem = alugueisTodos_().filter(a => a.salaId === salaId).map(a => a.mes);
+  const sh = planilha_().getSheetByName('Aluguéis');
+  for (let m = desde || atual; m <= atual; m = somaMeses(m, 1)) {
+    if (tem.indexOf(m) < 0) sh.appendRow([texto_(m), salaId, valor, sn_(false), '']);
+  }
 }
 
 function pagarSemana_(req) {
@@ -369,6 +382,7 @@ function normMes_(v) {
 function numero_(v) {
   if (v === '' || v == null) return null;
   if (typeof v === 'number') return v;
+  if (!/\d/.test(String(v))) return null;
   const n = Number(String(v).replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.'));
   return String(v).trim() === '' || isNaN(n) ? null : n;
 }

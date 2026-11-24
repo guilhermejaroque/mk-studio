@@ -148,3 +148,53 @@ test('dados de exemplo do modo demonstração funcionam no servidor de verdade',
   assert.equal(d.contas.length, 4);
   assert.equal(d.estoque[0].item, 'Acetona');
 });
+
+test('final: Valor com texto na agenda é ignorado e gasto com letras é recusado', () => {
+  const { p } = novo({
+    agenda: [CAB_AGENDA, ['a1', '2026-11-24', '08:00', 'Katia', 'Mão', 'Ana', 'confirmado', 'feito', 'a combinar', 'pix'],
+      ['a2', '2026-11-24', '09:30', 'Katia', 'Pé', 'Bia', 'confirmado', 'feito', 80, 'pix']]
+  });
+  const d = p('dados');
+  assert.equal(d.entradas.length, 1);
+  const r = p('lancar', { lancamento: { descricao: 'X', categoria: 'Outros', valor: 'abc', pago: true } });
+  assert.equal(r.ok, false);
+});
+
+test('final: atendimentos antes do início do app não entram nas entradas', () => {
+  const { p } = novo({
+    agenda: [CAB_AGENDA, ['a1', '2026-11-10', '08:00', 'Katia', 'Mão', 'Ana', 'confirmado', 'feito', 100, 'pix'],
+      ['a2', '2026-11-24', '09:30', 'Katia', 'Pé', 'Bia', 'confirmado', 'feito', 80, 'pix']]
+  });
+  const d = p('dados');
+  assert.equal(d.config.inicio, '2026-11-23');
+  assert.deepEqual(JSON.parse(JSON.stringify(d.entradas.map(e => e.cliente))), ['Bia']);
+  assert.equal(d.resumo.entrou.atendimentos, 80);
+});
+
+test('final: aluguel do mês passado ainda pode ser marcado depois que o mês virou', () => {
+  const g = fake({
+    Agenda: [CAB_AGENDA],
+    Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
+    Salas: [['ID', 'Nome', 'Valor mensal', 'Ocupada', 'Desde'], ['S1', 'Sala 1', 300, 'sim', "'2026-11"], ['S2', 'Sala 2', 300, 'não', '']],
+    Config: [['Chave', 'Valor'], ['inicio', "'2026-11-02"]]
+  }, { hoje: '2026-12-03' });
+  const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
+  let d = post(fns, { codigo: 'DonoMK', acao: 'dados', mes: '2026-11' });
+  assert.deepEqual(JSON.parse(JSON.stringify(d.alugueis.map(a => [a.salaId, a.recebido]))), [['S1', false]]);
+  d = post(fns, { codigo: 'DonoMK', acao: 'aluguel', mes: '2026-11', salaId: 'S1', recebido: true });
+  assert.equal(d.resumo.entrou.alugueis, 300);
+  d = post(fns, { codigo: 'DonoMK', acao: 'dados', mes: '2026-10' });
+  assert.equal(d.alugueis.length, 0);
+});
+
+test('final: sala que fica livre continua no mês atual e nos anteriores, some dos seguintes', () => {
+  const g = fake({
+    Agenda: [CAB_AGENDA],
+    Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
+    Salas: [['ID', 'Nome', 'Valor mensal', 'Ocupada', 'Desde'], ['S1', 'Sala 1', 300, 'sim', "'2026-10"], ['S2', 'Sala 2', 300, 'não', '']]
+  }, { hoje: '2026-11-25' });
+  const fns = carregar(['mk-gestao-app/calculos.gs', 'mk-gestao-app/Codigo.gs'], g);
+  post(fns, { codigo: 'DonoMK', acao: 'salvarSala', sala: { id: 'S1', nome: 'Sala 1', valor: 300, ocupada: false } });
+  const m = mes => post(fns, { codigo: 'DonoMK', acao: 'dados', mes }).alugueis.length;
+  assert.deepEqual([m('2026-10'), m('2026-11'), m('2026-12')], [1, 1, 0]);
+});
