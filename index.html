@@ -107,6 +107,9 @@ aside .btn{width:100%;margin-top:16px;border-radius:12px}
 .err{color:#b3261e;font-size:13px;margin:6px 0 0}
 aside .btn.line{margin-top:8px}
 .note,.sample{font-size:13px;color:var(--soft);margin:12px 0 0}
+.policy{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:13px;line-height:1.5;color:var(--soft)}
+.policy p{margin:0 0 6px}.policy p:last-child{margin:0}
+.policy b{font-weight:500;color:var(--ink)}
 
 /* fotos */
 .photos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
@@ -225,7 +228,11 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
             <p class="err" id="err" hidden></p>
             <button class="btn" id="go" type="submit">Confirmar agendamento</button>
           </form>
-          <p class="note">Ao confirmar, o horário sai da agenda para outras clientes.</p>
+          <div class="policy">
+            <p><b>Seu horário fica reservado só para você.</b></p>
+            <p>Se precisar desmarcar, é só avisar com 24h de antecedência. Temos tolerância de 10 minutos para atrasos.</p>
+            <p>Cancelamentos com menos de 24h, atrasos acima de 10 minutos ou faltas sem aviso têm taxa de 50% do valor do serviço.</p>
+          </div>
         </div>
         <div id="doneView" class="done" hidden>
           <div class="ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10.5 8.2 14.5 16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
