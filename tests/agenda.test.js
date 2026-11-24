@@ -52,3 +52,38 @@ test('final: página antiga sem forma de pagamento ainda consegue marcar feito',
   assert.equal(ag.linhas[1][col('Execução')], 'feito');
   assert.equal(ag.linhas[1][col('Pagamento')], '');
 });
+
+const CAB_EST = ['ID', 'Item', 'Unidade', 'Quantidade', 'Mínimo'];
+function comEstoque(linhasEstoque) {
+  const abas = {
+    Agenda: [CAB], Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
+    'Serviços': [['Serviço', 'Preço', 'Por unidade']], Bloqueios: [['Data', 'Profissional', 'Horário', 'Motivo']], 'Horários': [['terca', 'sim']]
+  };
+  if (linhasEstoque) abas.Estoque = linhasEstoque;
+  const g = fake(abas, { hoje: '2026-11-25' });
+  const fns = carregar(['mk-agenda-app/Codigo.gs'], g);
+  return { g, p: (acao, extra = {}) => post(fns, { codigo: 'SueniaMK', acao, ...extra }) };
+}
+
+test('estoque: sem a aba, cria com o cabeçalho da gestão e devolve lista vazia', () => {
+  const { g, p } = comEstoque(null);
+  const r = p('estoque');
+  assert.equal(r.ok, true);
+  assert.equal(r.estoque.length, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(g._planilha.abas.Estoque.linhas[0])), CAB_EST);
+});
+
+test('estoque: cadastrar, tirar até zero (fica primeiro), apagar e nome vazio', () => {
+  const { p } = comEstoque([CAB_EST, ['e1', 'Algodão', 'pacotes', 10, 2]]);
+  let r = p('salvarItem', { item: { item: 'Acetona', unidade: 'frascos', quantidade: 2, minimo: 1 } });
+  assert.equal(r.estoque.length, 2);
+  const id = r.estoque.find(i => i.item === 'Acetona').id;
+  r = p('ajusteEstoque', { id, delta: -5 });
+  assert.equal(r.estoque[0].item, 'Acetona');
+  assert.equal(r.estoque[0].quantidade, 0);
+  r = p('salvarItem', { item: { id: 'e1', item: 'Algodão', unidade: 'pacotes', quantidade: 8, minimo: 2 } });
+  assert.equal(r.estoque.find(i => i.id === 'e1').quantidade, 8);
+  r = p('apagarItem', { id });
+  assert.deepEqual(JSON.parse(JSON.stringify(r.estoque.map(i => i.item))), ['Algodão']);
+  assert.equal(p('salvarItem', { item: { item: '  ' } }).ok, false);
+});

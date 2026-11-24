@@ -44,6 +44,10 @@ function doPost(e) {
       case 'dados': return json_(dados_(prof));
       case 'marcar': return json_(comTrava_(() => marcar_(prof, req)));
       case 'folga': return json_(comTrava_(() => folga_(prof, req)));
+      case 'estoque': return json_({ ok: true, estoque: listaEstoque_() });
+      case 'salvarItem': return json_(comTrava_(() => salvarItem_(req)));
+      case 'ajusteEstoque': return json_(comTrava_(() => ajusteEstoque_(req)));
+      case 'apagarItem': return json_(comTrava_(() => apagarItem_(req)));
       default: return json_({ ok: false, erro: 'Ação desconhecida.' });
     }
   } catch (err) {
@@ -185,6 +189,64 @@ function folga_(prof, req) {
   }
   SpreadsheetApp.flush();
   return dados_(prof);
+}
+
+/* ---------------------------- estoque ----------------------------- */
+// Mesma aba "Estoque" do app de gestão (mesmo cabeçalho).
+
+const CAB_ESTOQUE = ['ID', 'Item', 'Unidade', 'Quantidade', 'Mínimo'];
+
+function abaEstoque_() {
+  const pl = planilha_();
+  let sh = pl.getSheetByName('Estoque');
+  if (!sh) { sh = pl.insertSheet('Estoque'); sh.appendRow(CAB_ESTOQUE); }
+  const v = sh.getDataRange().getValues();
+  const cab = v[0].map(c => String(c).trim());
+  const col = {};
+  cab.forEach((c, i) => { col[c] = i; });
+  const linhas = v.slice(1).map((r, i) => ({ r: r, linha: i + 2 })).filter(x => String(x.r[col.ID] || '').trim());
+  return { sheet: sh, cab: cab, col: col, linhas: linhas };
+}
+
+function listaEstoque_() {
+  const t = abaEstoque_();
+  return t.linhas.map(x => ({
+    id: String(x.r[t.col.ID]), item: String(x.r[t.col.Item] || ''), unidade: String(x.r[t.col.Unidade] || ''),
+    quantidade: numero_(x.r[t.col.Quantidade]) || 0, minimo: numero_(x.r[t.col['Mínimo']]) || 0
+  })).sort((a, b) => ((b.quantidade <= b.minimo) - (a.quantidade <= a.minimo)) || a.item.localeCompare(b.item));
+}
+
+function salvarItem_(req) {
+  const i = req.item || {};
+  const nome = String(i.item || '').trim();
+  if (!nome) return { ok: false, erro: 'Digite o nome do material.' };
+  const t = abaEstoque_();
+  const valores = { 'ID': i.id || Utilities.getUuid(), 'Item': nome, 'Unidade': String(i.unidade || '').trim(),
+    'Quantidade': Math.max(0, numero_(i.quantidade) || 0), 'Mínimo': Math.max(0, numero_(i.minimo) || 0) };
+  const achado = i.id ? t.linhas.find(x => String(x.r[t.col.ID]) === String(i.id)) : null;
+  const linha = t.cab.map((c, j) => (c in valores ? valores[c] : (achado ? achado.r[j] : '')));
+  if (achado) t.sheet.getRange(achado.linha, 1, 1, linha.length).setValues([linha]);
+  else t.sheet.appendRow(linha);
+  SpreadsheetApp.flush();
+  return { ok: true, estoque: listaEstoque_() };
+}
+
+function ajusteEstoque_(req) {
+  const t = abaEstoque_();
+  const x = t.linhas.find(l => String(l.r[t.col.ID]) === String(req.id));
+  if (!x) return { ok: false, erro: 'Material não encontrado. Atualize a lista.' };
+  const q = Math.max(0, (numero_(x.r[t.col.Quantidade]) || 0) + (Number(req.delta) || 0));
+  t.sheet.getRange(x.linha, t.col.Quantidade + 1).setValue(q);
+  SpreadsheetApp.flush();
+  return { ok: true, estoque: listaEstoque_() };
+}
+
+function apagarItem_(req) {
+  const t = abaEstoque_();
+  t.linhas.filter(l => String(l.r[t.col.ID]) === String(req.id)).map(l => l.linha)
+    .sort((a, b) => b - a).forEach(l => t.sheet.deleteRow(l));
+  SpreadsheetApp.flush();
+  return { ok: true, estoque: listaEstoque_() };
 }
 
 /* ----------------------------- apoio ------------------------------ */
