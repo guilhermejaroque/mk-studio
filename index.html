@@ -49,11 +49,12 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
 @media(prefers-reduced-motion:no-preference){.drawer{transition:transform .35s cubic-bezier(.2,.7,.2,1)}.scrim{transition:opacity .3s}}
 
 /* início */
-.hero{position:relative;background:var(--sand);overflow:hidden;min-height:clamp(420px,62vh,620px);display:grid}
-.hero svg{position:absolute;inset:0;width:100%;height:100%}
-.hero .txt{position:relative;align-self:end;padding-bottom:clamp(28px,5vw,56px);padding-top:40px}
-.hero h1{font-size:clamp(36px,5.4vw,58px);font-weight:300;max-width:12ch;text-wrap:balance}
-.hero p{margin:10px 0 22px;font-size:17px;color:var(--soft)}
+.hero{position:relative;background:var(--sand);overflow:hidden;padding-top:clamp(40px,6vw,76px);padding-bottom:clamp(40px,6vw,72px)}
+.hero .bgpat{position:absolute;inset:0;width:100%;height:100%}
+.hero .hwrap{position:relative;max-width:820px;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center}
+.hero h1{font-size:clamp(36px,5.4vw,60px);font-weight:300;max-width:16ch;text-wrap:balance;color:var(--ink)}
+.hero .still{width:min(380px,86%);height:auto;display:block;margin:clamp(18px,3vw,30px) 0 8px}
+.hero .hours{margin:0 0 24px;font-size:17px;font-weight:400;color:var(--cacao)}
 .btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 28px;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:400;border:1px solid var(--ink);cursor:pointer}
 .btn.line{background:transparent;color:var(--ink)}
 .btn[aria-disabled=true]{opacity:.45;pointer-events:none}
@@ -122,7 +123,9 @@ aside .btn.line{margin-top:8px}
 
 /* contato */
 .contact{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px;border-top:1px solid var(--line);padding-top:28px}
-.contact h3{font-size:15px;font-weight:500;margin-bottom:8px}
+.contact h3{font-size:15px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:var(--cacao);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sec>.wrap>h2.tight{margin-bottom:18px}
 .contact p{margin:0;color:var(--soft)}
 .contact a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);white-space:nowrap}
 .contact a:hover{border-color:var(--ink)}
@@ -135,7 +138,7 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
 .bar{display:none}
 @media(max-width:900px){.book{grid-template-columns:minmax(0,1fr)}aside{position:static}.bar{display:flex;position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);align-items:center;gap:12px;z-index:15;transform:translateY(110%)}.bar.on{transform:none}.bar p{margin:0;flex:1;font-size:15px;line-height:1.3}.bar a{font-weight:500;white-space:nowrap;min-height:44px;display:flex;align-items:center;text-decoration:none;border-bottom:1px solid}.photos{grid-template-columns:repeat(2,minmax(0,1fr))}.contact{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.contact{grid-template-columns:minmax(0,1fr)}}
-@media(max-width:600px){.cta{display:none}.top .wrap{grid-template-columns:auto 1fr auto}.top .word{justify-self:center}.menuBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .txt{align-self:start}}
+@media(max-width:600px){.cta{display:none}.top .wrap{grid-template-columns:auto 1fr auto}.top .word{justify-self:center}.menuBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(prefers-reduced-motion:no-preference){.blk,.day,.opt{transition:background-color .2s,border-color .2s}.bar{transition:transform .3s}}
 </style>
 </head>
@@ -161,8 +164,7 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
 </div>
 
 <section class="hero band" id="inicio">
-  <svg viewBox="0 0 1200 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-    <defs>
+  <svg class="bgpat" aria-hidden="true"><defs>
       <pattern id="mono" width="120" height="120" patternUnits="userSpaceOnUse">
         <g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".12" style="color:var(--cacao)">
           <text x="18" y="44" font-family="Jost,sans-serif" font-size="22" letter-spacing="3" fill="currentColor" stroke="none">MK</text>
@@ -173,10 +175,11 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
       <linearGradient id="glass2" x1="0" x2="1"><stop offset="0" stop-color="#5e2a2c"/><stop offset=".55" stop-color="#8a3e40"/><stop offset="1" stop-color="#4a1f22"/></linearGradient>
       <linearGradient id="cap" x1="0" x2="1"><stop offset="0" stop-color="#1b1411"/><stop offset=".5" stop-color="#3a2e28"/><stop offset="1" stop-color="#140f0d"/></linearGradient>
       <linearGradient id="table" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3d6c6"/><stop offset="1" stop-color="#d6c5b1"/></linearGradient>
-    </defs>
-    <rect width="1200" height="620" fill="url(#mono)"/>
-    <rect y="500" width="1200" height="120" fill="url(#table)" opacity=".9"/>
-    <g transform="translate(760 0)">
+    </defs><rect width="100%" height="100%" fill="url(#mono)"/></svg>
+  <div class="hwrap">
+    <h1>Cuidar de você é a nossa arte</h1>
+    <svg class="still" viewBox="0 0 440 326" aria-hidden="true">
+      <g transform="translate(80 -200)">
       <ellipse cx="150" cy="510" rx="190" ry="16" fill="#5a4232" opacity=".14"/>
       <!-- frasco alto -->
       <rect x="70" y="210" width="34" height="96" fill="url(#cap)"/>
@@ -193,10 +196,8 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
       <!-- pétalas -->
       <g fill="#b98a7a" opacity=".75"><ellipse cx="300" cy="496" rx="18" ry="7" transform="rotate(20 300 496)"/><ellipse cx="330" cy="500" rx="14" ry="6" transform="rotate(-25 330 500)"/></g>
     </g>
-  </svg>
-  <div class="txt wrap" style="width:100%">
-    <h1>Manicure e pedicure com cuidado de ateliê</h1>
-    <p>Terça a sábado, das 8h às 19h30</p>
+    </svg>
+    <p class="hours">Terça a sábado, das 8h às 19h30</p>
     <a class="btn" href="#agendamento">Agendar horário</a>
   </div>
 </section>
@@ -208,7 +209,7 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
     <div class="book">
       <div>
         <div class="step"><h3>Profissional</h3><div class="chips" id="pros"></div></div>
-        <div class="step"><h3>Serviço</h3><div class="svc" id="svcs"></div><p class="sample">Cada atendimento ocupa um bloco de 1h30.</p></div>
+        <div class="step"><h3>Serviço</h3><div class="svc" id="svcs"></div></div>
         <div class="step"><h3>Dia</h3><div class="days" id="days"></div></div>
         <div class="step">
           <div class="dayHead"><h3 id="dayTitle"></h3><div class="legend"><span style="--c:var(--bg)">Livre</span><span style="--c:var(--busy)">Ocupado</span><span style="--c:var(--ink)">Escolhido</span></div></div>
@@ -257,13 +258,12 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
 
 <section class="sec band" id="contato">
   <div class="wrap">
-    <h2>Contato</h2>
-    <p class="lede">Venha nos visitar ou fale com a gente.</p>
+    <h2 class="tight">Contato</h2>
     <div class="contact">
-      <div><h3>Endereço</h3><p>Rua Luis Cunha, 139</p></div>
-      <div><h3>Telefone</h3><p><a href="tel:+5511981395225">+55 (11) 98139-5225</a></p></div>
-      <div><h3>Instagram</h3><p><a href="https://www.instagram.com/mkcuidadoebeleza/" target="_blank" rel="noopener">@mkcuidadoebeleza</a></p></div>
-      <div><h3>Horário de funcionamento</h3>
+      <div><h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.6"/></svg>Endereço</h3><p>Rua Luis Cunha, 139</p></div>
+      <div><h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5h2.8l1.4 4.2-2 1.4a12 12 0 0 0 6.1 6.1l1.4-2 4.2 1.4v2.8A2.1 2.1 0 0 1 18.4 19.5 15 15 0 0 1 4.5 5.6 2.1 2.1 0 0 1 6.6 3.5z"/></svg>Telefone</h3><p><a href="tel:+5511981395225">+55 (11) 98139-5225</a></p></div>
+      <div><h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>Instagram</h3><p><a href="https://www.instagram.com/mkcuidadoebeleza/" target="_blank" rel="noopener">@mkcuidadoebeleza</a></p></div>
+      <div><h3><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Horário de funcionamento</h3>
         <table><tbody><tr><td>Terça a sábado</td><td>8h às 19h30</td></tr><tr><td>Domingo e segunda</td><td>Fechado</td></tr></tbody></table></div>
     </div>
   </div>
@@ -326,10 +326,11 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") openMenu(fal
   $("photos").innerHTML = FOTOS.map(f => `<figure><span class="ph"><img src="${IMG[f.f]||""}" alt="${esc(f.t+": "+f.c)}" loading="lazy" width="375" height="469"></span><figcaption>${esc(f.t)} <span>· ${esc(f.c)}</span></figcaption></figure>`).join("");
 }
 
-// datas (14 dias a partir de hoje)
+// datas (de hoje até 30 dias à frente)
 let today = new Date(); today.setHours(0,0,0,0);
 let dates = [];
-const makeDates = () => { dates = Array.from({length:14}, (_,i) => { const d = new Date(today); d.setDate(d.getDate()+i); return d; }); };
+let NDIAS = 31; // hoje + 30 dias
+const makeDates = () => { dates = Array.from({length:NDIAS}, (_,i) => { const d = new Date(today); d.setDate(d.getDate()+i); return d; }); };
 makeDates();
 let nowMin = () => { const n = new Date(); return n.getHours()*60 + n.getMinutes(); };
 
@@ -413,7 +414,7 @@ async function load(){
     PROS = j.profissionais.map(p => ({ id: String(p.id), nome: String(p.nome), papel: String(p.funcao || "") }));
     SERVICOS = j.servicos.map(s => ({ nome: String(s.nome), preco: s.preco }));
     BLOCOS = {}; Object.keys(j.blocos).forEach(k => BLOCOS[k] = j.blocos[k].map(String));
-    LEN = +j.duracaoBloco || 90; ANTECEDENCIA = +j.antecedenciaMin || 30;
+    LEN = +j.duracaoBloco || 90; NDIAS = (+j.diasAFrente || 30) + 1; ANTECEDENCIA = +j.antecedenciaMin || 30;
     const [y,m,d] = String(j.hoje).split("-").map(Number); today = new Date(y, m-1, d); makeDates();
     const base = +j.agoraMin, t0 = Date.now(); nowMin = () => base + Math.floor((Date.now()-t0)/60000);
     OCUP = new Set(j.ocupados.map(o => key(o.p, o.d, o.h)));
