@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MK Studio Agenda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE quiet luxury house: white space, fine rules, few words
+   IDEA a maison's boutique site: centred wordmark, side menu, full-bleed hero, then the appointment book
+   PICTURE a still life of polish bottles on a sand field over an MK monogram pattern
+   COLOUR white, near-black ink, sand #efe6da, cacao #5a4232
+   TYPE Jost light/medium for wordmark and text
+   LAYOUT top bar (menu, wordmark, agendar); hero band; agendamento with sticky summary; fotos grid; contato; phone stacks */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#121010);--ink:light-dark(#19130f,#f2ece4);--soft:light-dark(#6f645b,#b9ada1);--sand:light-dark(#efe6da,#221c18);--cacao:light-dark(#5a4232,#c9a98c);--line:light-dark(#e3dbd1,#352d27);--panel:light-dark(#faf7f3,#1a1613);--busy:light-dark(#ece6df,#26201c)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:72px}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:300 16px/1.6 Jost,"Futura","Century Gothic",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-weight:400;line-height:1.08;letter-spacing:-.01em;margin:0}
+a{color:inherit}
+.band{padding-left:max(5vw,16px);padding-right:max(5vw,16px)}
+.wrap{max-width:1180px;margin:0 auto}
+button,input,textarea{font:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+
+/* barra superior */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:64px}
+.menuBtn{justify-self:start;display:flex;align-items:center;gap:10px;background:none;border:0;color:var(--ink);cursor:pointer;min-height:44px;padding:0;font-size:15px;font-weight:400}
+.menuBtn i{display:grid;gap:5px;width:20px}
+.menuBtn i::before,.menuBtn i::after{content:"";height:1.5px;background:currentColor}
+.word{font-size:clamp(20px,2.6vw,26px);font-weight:400;letter-spacing:.32em;margin-right:-.32em;text-decoration:none;white-space:nowrap}
+.cta{justify-self:end;font-size:15px;font-weight:400;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;white-space:nowrap}
+
+/* menu lateral */
+.scrim{position:fixed;inset:0;background:rgb(0 0 0 / .35);opacity:0;pointer-events:none;z-index:30}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(380px,88vw);background:var(--bg);z-index:31;transform:translateX(-102%);padding:22px max(5vw,24px) 32px;display:flex;flex-direction:column;border-right:1px solid var(--line)}
+.open .scrim{opacity:1;pointer-events:auto}.open .drawer{transform:none}
+.drawer .x{align-self:flex-start;background:none;border:0;color:var(--ink);font-size:15px;cursor:pointer;min-height:44px;padding:0;display:flex;align-items:center;gap:10px}
+.drawer .x span{font-size:22px;line-height:1}
+.drawer nav{margin-top:36px;display:grid}
+.drawer nav a{font-size:28px;font-weight:300;text-decoration:none;padding:12px 0;border-bottom:1px solid var(--line)}
+.drawer nav a:hover{color:var(--cacao)}
+.drawer p{margin-top:auto;font-size:14px;color:var(--soft)}
+@media(prefers-reduced-motion:no-preference){.drawer{transition:transform .35s cubic-bezier(.2,.7,.2,1)}.scrim{transition:opacity .3s}}
+
+/* início */
+.hero{position:relative;background:var(--sand);overflow:hidden;min-height:clamp(420px,62vh,620px);display:grid}
+.hero svg{position:absolute;inset:0;width:100%;height:100%}
+.hero .txt{position:relative;align-self:end;padding-bottom:clamp(28px,5vw,56px);padding-top:40px}
+.hero h1{font-size:clamp(36px,5.4vw,58px);font-weight:300;max-width:12ch;text-wrap:balance}
+.hero p{margin:10px 0 22px;font-size:17px;color:var(--soft)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 28px;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:400;border:1px solid var(--ink);cursor:pointer}
+.btn.line{background:transparent;color:var(--ink)}
+.btn[aria-disabled=true]{opacity:.45;pointer-events:none}
+
+section.sec{padding-top:clamp(48px,7vw,88px);padding-bottom:clamp(40px,6vw,72px)}
+.sec>.wrap>h2{font-size:clamp(30px,3.6vw,40px);font-weight:300;margin-bottom:8px}
+.lede{color:var(--soft);margin:0 0 32px;max-width:60ch}
+
+/* agendamento */
+.book{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:40px;align-items:start}
+.step{margin-bottom:34px}
+.step h3{font-size:15px;font-weight:500;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.opt{min-height:48px;padding:10px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}
+.opt small{display:block;color:var(--soft);font-size:13px}
+.opt[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.days{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.day{flex:none;scroll-snap-align:start;width:66px;min-height:80px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:grid;place-items:center;padding:8px 0;line-height:1.2}
+.day small,.day i{font-size:13px;color:var(--soft);font-style:normal}
+.day b{font-size:22px;font-weight:400}
+.day[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.day[aria-pressed=true] small,.day[aria-pressed=true] i{color:var(--bg)}
+.day:disabled{opacity:.4;cursor:not-allowed}
+.dayHead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:6px}
+.dayHead h3{font-size:22px;font-weight:300;margin:0}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--soft);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:1px solid var(--line);background:var(--c)}
+.per{font-size:14px;font-weight:500;color:var(--soft);margin:18px 0 8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.blk{text-align:left;min-height:72px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;display:grid;gap:2px}
+.blk b{font-size:18px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
+.blk span{font-size:13px;color:var(--soft)}
+.blk:hover:not(:disabled){border-color:var(--ink)}
+.blk[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.blk[aria-pressed=true] span{color:var(--bg)}
+.blk:disabled{cursor:not-allowed;background:var(--busy);color:var(--soft)}
+.blk:disabled b{text-decoration:line-through;text-decoration-thickness:1px}
+.empty{margin-top:14px;padding:16px;border-radius:12px;border:1px dashed var(--line);color:var(--soft)}
+aside{position:sticky;top:88px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+aside h3{font-size:22px;font-weight:300;margin-bottom:16px}
+.sum{margin:0 0 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:15px}
+.sum dt{color:var(--soft)}
+.sum dd{margin:0;font-weight:400}
+label{display:block;font-size:14px;font-weight:500;margin:12px 0 4px}
+input,textarea{width:100%;font-size:16px;font-weight:300;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+textarea{min-height:68px;resize:vertical}
+aside .btn{width:100%;margin-top:16px;border-radius:12px}
+.done{text-align:left}
+.done .ok{width:44px;height:44px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;margin-bottom:12px}
+.err{color:#b3261e;font-size:13px;margin:6px 0 0}
+aside .btn.line{margin-top:8px}
+.note,.sample{font-size:13px;color:var(--soft);margin:12px 0 0}
+
+/* fotos */
+.photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.photos figure{margin:0}
+.photos .ph{aspect-ratio:4/5;background:var(--sand);display:block}
+.photos .ph svg{width:100%;height:100%;display:block}
+.photos figcaption{font-size:14px;margin-top:8px}
+.photos figcaption span{color:var(--soft)}
+
+/* contato */
+.contact{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;border-top:1px solid var(--line);padding-top:28px}
+.contact h3{font-size:15px;font-weight:500;margin-bottom:8px}
+.contact p{margin:0;color:var(--soft)}
+.contact table{border-collapse:collapse;font-size:15px}
+.contact td{padding:3px 18px 3px 0;color:var(--soft);white-space:nowrap}
+.contact td:first-child{color:var(--ink)}
+footer{border-top:1px solid var(--line);padding-top:28px;padding-bottom:40px;text-align:center;color:var(--soft);font-size:13px}
+footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
+
+.bar{display:none}
+@media(max-width:900px){.book{grid-template-columns:minmax(0,1fr)}aside{position:static}.bar{display:flex;position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);align-items:center;gap:12px;z-index:15;transform:translateY(110%)}.bar.on{transform:none}.bar p{margin:0;flex:1;font-size:15px;line-height:1.3}.bar a{font-weight:500;white-space:nowrap;min-height:44px;display:flex;align-items:center;text-decoration:none;border-bottom:1px solid}.photos{grid-template-columns:repeat(2,minmax(0,1fr))}.contact{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.cta{display:none}.top .wrap{grid-template-columns:auto 1fr auto}.top .word{justify-self:center}.menuBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero .txt{align-self:start}}
+@media(prefers-reduced-motion:no-preference){.blk,.day,.opt{transition:background-color .2s,border-color .2s}.bar{transition:transform .3s}}
+</style>
+</head>
+<body>
+<header class="top band">
+  <div class="wrap">
+    <button class="menuBtn" id="menuBtn" type="button" aria-expanded="false" aria-controls="drawer"><i></i><span>Menu</span></button>
+    <a class="word" href="#inicio">MK STUDIO</a>
+    <a class="cta" href="#agendamento">Agendar</a>
+  </div>
+</header>
+
+<div class="scrim" id="scrim"></div>
+<div class="drawer" id="drawer" role="dialog" aria-label="Menu" aria-hidden="true">
+  <button class="x" id="closeBtn" type="button"><span>×</span>Fechar</button>
+  <nav>
+    <a href="#inicio">Início</a>
+    <a href="#agendamento">Agendamento</a>
+    <a href="#fotos">Fotos</a>
+    <a href="#contato">Contato</a>
+  </nav>
+  <p>Terça a sábado, das 8h às 19h30</p>
+</div>
+
+<section class="hero band" id="inicio">
+  <svg viewBox="0 0 1200 620" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+      <pattern id="mono" width="120" height="120" patternUnits="userSpaceOnUse">
+        <g fill="none" stroke="currentColor" stroke-width="1.2" opacity=".12" style="color:var(--cacao)">
+          <text x="18" y="44" font-family="Jost,sans-serif" font-size="22" letter-spacing="3" fill="currentColor" stroke="none">MK</text>
+          <path d="M90 82c0-8 6-14 0-22-6 8 0 14 0 22zm0 0c8 0 14 6 22 0-8-6-14 0-22 0zm0 0c0 8-6 14 0 22 6-8 0-14 0-22zm0 0c-8 0-14-6-22 0 8 6 14 0 22 0z"/>
+        </g>
+      </pattern>
+      <linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#b98a7a"/><stop offset=".55" stop-color="#d8b0a2"/><stop offset="1" stop-color="#9c6f61"/></linearGradient>
+      <linearGradient id="glass2" x1="0" x2="1"><stop offset="0" stop-color="#5e2a2c"/><stop offset=".55" stop-color="#8a3e40"/><stop offset="1" stop-color="#4a1f22"/></linearGradient>
+      <linearGradient id="cap" x1="0" x2="1"><stop offset="0" stop-color="#1b1411"/><stop offset=".5" stop-color="#3a2e28"/><stop offset="1" stop-color="#140f0d"/></linearGradient>
+      <linearGradient id="table" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3d6c6"/><stop offset="1" stop-color="#d6c5b1"/></linearGradient>
+    </defs>
+    <rect width="1200" height="620" fill="url(#mono)"/>
+    <rect y="500" width="1200" height="120" fill="url(#table)" opacity=".9"/>
+    <g transform="translate(760 0)">
+      <ellipse cx="150" cy="510" rx="190" ry="16" fill="#5a4232" opacity=".14"/>
+      <!-- frasco alto -->
+      <rect x="70" y="210" width="34" height="96" fill="url(#cap)"/>
+      <rect x="64" y="300" width="46" height="14" fill="#2b221d"/>
+      <path d="M40 330q0-16 16-16h62q16 0 16 16v160q0 14-14 14H54q-14 0-14-14z" fill="url(#glass)"/>
+      <path d="M52 336v150" stroke="#fff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+      <!-- frasco baixo -->
+      <rect x="196" y="318" width="30" height="74" fill="url(#cap)"/>
+      <rect x="190" y="388" width="42" height="12" fill="#2b221d"/>
+      <path d="M168 414q0-14 14-14h58q14 0 14 14v78q0 12-12 12h-62q-12 0-12-12z" fill="url(#glass2)"/>
+      <path d="M180 420v70" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round"/>
+      <!-- lixa -->
+      <rect x="-60" y="486" width="180" height="12" rx="6" fill="#c9a98c" transform="rotate(-6 30 492)"/>
+      <!-- pétalas -->
+      <g fill="#b98a7a" opacity=".75"><ellipse cx="300" cy="496" rx="18" ry="7" transform="rotate(20 300 496)"/><ellipse cx="330" cy="500" rx="14" ry="6" transform="rotate(-25 330 500)"/></g>
+    </g>
+  </svg>
+  <div class="txt wrap" style="width:100%">
+    <h1>Manicure e pedicure com cuidado de ateliê</h1>
+    <p>Terça a sábado, das 8h às 19h30</p>
+    <a class="btn" href="#agendamento">Agendar horário</a>
+  </div>
+</section>
+
+<section class="sec band" id="agendamento">
+  <div class="wrap">
+    <h2>Agendamento</h2>
+    <p class="lede">Escolha a profissional, o serviço e um horário livre. O horário fica reservado assim que você confirmar.</p>
+    <div class="book">
+      <div>
+        <div class="step"><h3>Profissional</h3><div class="chips" id="pros"></div></div>
+        <div class="step"><h3>Serviço</h3><div class="svc" id="svcs"></div><p class="sample">Cada atendimento ocupa um bloco de 1h30.</p></div>
+        <div class="step"><h3>Dia</h3><div class="days" id="days"></div></div>
+        <div class="step">
+          <div class="dayHead"><h3 id="dayTitle"></h3><div class="legend"><span style="--c:var(--bg)">Livre</span><span style="--c:var(--busy)">Ocupado</span><span style="--c:var(--ink)">Escolhido</span></div></div>
+          <div id="slots"></div>
+          <p class="sample" id="demoNote">Horários ocupados de exemplo. No site publicado eles vêm da planilha da agenda.</p>
+        </div>
+      </div>
+      <aside id="panel">
+        <div id="formView">
+          <h3>Seu agendamento</h3>
+          <dl class="sum" id="sum"></dl>
+          <form id="form" novalidate>
+            <label for="nome">Seu nome</label><input id="nome" autocomplete="name" placeholder="Nome e sobrenome">
+            <label for="tel">Telefone</label><input id="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 98765-4321">
+            <label for="obs">Observação (opcional)</label><textarea id="obs" placeholder="Ex.: primeira vez no salão"></textarea>
+            <input id="hp" name="site" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px">
+            <p class="err" id="err" hidden></p>
+            <button class="btn" id="go" type="submit">Confirmar agendamento</button>
+          </form>
+          <p class="note">Ao confirmar, o horário sai da agenda para outras clientes.</p>
+        </div>
+        <div id="doneView" class="done" hidden>
+          <div class="ok" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M4 10.5 8.2 14.5 16 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h3>Agendamento confirmado</h3>
+          <dl class="sum" id="doneSum"></dl>
+          <button class="btn line" id="again" type="button">Fazer outro agendamento</button>
+          <p class="note">Protótipo: nesta prévia o agendamento fica só na sua tela. No site publicado ele vai direto para a agenda do salão.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="sec band" id="fotos" style="background:var(--panel)">
+  <div class="wrap">
+    <h2>Fotos</h2>
+    <p class="lede">Alguns trabalhos do estúdio. Por enquanto são ilustrações, no lugar das fotos que vamos adicionar.</p>
+    <div class="photos" id="photos"></div>
+  </div>
+</section>
+
+<section class="sec band" id="contato">
+  <div class="wrap">
+    <h2>Contato</h2>
+    <p class="lede">O endereço e o telefone entram aqui assim que forem definidos.</p>
+    <div class="contact">
+      <div><h3>Horário de funcionamento</h3>
+        <table><tbody><tr><td>Terça a sábado</td><td>8h às 19h30</td></tr><tr><td>Domingo e segunda</td><td>Fechado</td></tr></tbody></table></div>
+      <div><h3>WhatsApp</h3><p id="wpp">Número em breve</p></div>
+      <div><h3>Agendamentos</h3><p>Pelo site, a qualquer hora. O horário é reservado na hora da confirmação.</p><p style="margin-top:12px"><a class="btn line" href="#agendamento">Agendar horário</a></p></div>
+    </div>
+  </div>
+</section>
+
+<footer class="band"><span class="word">MK STUDIO</span>Manicure e pedicure · Terça a sábado, 8h às 19h30</footer>
+
+<div class="bar" id="bar"><p id="barText">Escolha um horário</p><a href="#panel">Confirmar</a></div>
+
+<script>
+{
+// Endereço do App da Web do Apps Script (Implantar > App da Web).
+const API_URL = "https://script.google.com/macros/s/AKfycbwagXyrU96_SA3gFaE8f4S0eOrGzvX8gRDASyAwyDpay_0E7kaLvij_sKg2KZeX3bsbZQ/exec";
+// Na prévia do Claude a página não pode falar com o Google, então ela usa dados de exemplo.
+const API = /claude|anthropic/.test(location.hostname) ? "" : API_URL;
+let LEN = 90; // cada bloco tem 1h30
+let PROS = [
+  { id: "katia", nome: "Katia", papel: "Manicure" },
+  { id: "suenia", nome: "Suênia", papel: "Manicure" }
+];
+let SERVICOS = [
+  { nome: "Manicure" }, { nome: "Pedicure" }, { nome: "Pé e mão" },
+  { nome: "Esmaltação em gel" }, { nome: "Blindagem de unhas" }
+];
+const PADRAO = ["08:00","09:30","11:00","13:30","15:00","16:30","18:00"];
+let BLOCOS = { 0: [], 1: [], 2: PADRAO, 3: PADRAO, 4: PADRAO, 5: PADRAO, 6: PADRAO };
+let ANTECEDENCIA = 30;
+const FOTOS = [
+  { t: "Esmaltação em gel", c: "Nude rosado", cor: "#d3a596" },
+  { t: "Pé e mão", c: "Vermelho clássico", cor: "#8f2a2e" },
+  { t: "Blindagem", c: "Brilho natural", cor: "#ead7cc" },
+  { t: "Manicure", c: "Café", cor: "#5a3a2c" },
+  { t: "Esmaltação em gel", c: "Francesinha", cor: "#f3ece6", tip: true },
+  { t: "Pedicure", c: "Vinho", cor: "#4e1d27" }
+];
+const blocosDe = d => BLOCOS[d.getDay()] || [];
+const closed = d => !blocosDe(d).length;
+const DIAS = ["dom","seg","ter","qua","qui","sex","sáb"];
+const DIAS_LONGO = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const hm = m => pad(Math.floor(m/60))+"h"+(m%60?pad(m%60):"");
+const toMin = s => { const [h,m] = s.split(":").map(Number); return h*60+m; };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+
+// menu
+const openMenu = v => { document.body.classList.toggle("open", v); $("menuBtn").setAttribute("aria-expanded", v); $("drawer").setAttribute("aria-hidden", !v); if (v) $("closeBtn").focus(); };
+$("menuBtn").addEventListener("click", () => openMenu(true));
+$("closeBtn").addEventListener("click", () => openMenu(false));
+$("scrim").addEventListener("click", () => openMenu(false));
+$("drawer").addEventListener("click", e => { if (e.target.closest("a")) openMenu(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") openMenu(false); });
+
+// fotos (ilustrações)
+$("photos").innerHTML = FOTOS.map((f,i) => {
+  const nails = [[60,118,30],[100,96,34],[142,90,34],[184,100,32],[222,124,26]].map(([x,y,w]) =>
+    `<rect x="${x}" y="${y}" width="${w}" height="${w*1.5}" rx="${w/2}" fill="${f.cor}"/>` +
+    (f.tip ? `<path d="M${x} ${y+w*.5}a${w/2} ${w/2} 0 0 1 ${w} 0" fill="#fff"/>` : "") +
+    `<rect x="${x+w*.22}" y="${y+w*.25}" width="${w*.14}" height="${w*.7}" rx="${w*.07}" fill="#fff" opacity=".45"/>`).join("");
+  return `<figure><span class="ph"><svg viewBox="0 0 300 375" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="300" height="375" fill="${i%2?"#e9ddcf":"#efe6da"}"/>
+    <path d="M40 375V190q0-24 24-24h170q26 0 26 26v183z" fill="#d9b9a3"/>
+    <g transform="translate(0 70)">${nails}</g></svg></span>
+    <figcaption>${esc(f.t)} <span>· ${esc(f.c)}</span></figcaption></figure>`;
+}).join("");
+
+// datas (14 dias a partir de hoje)
+let today = new Date(); today.setHours(0,0,0,0);
+let dates = [];
+const makeDates = () => { dates = Array.from({length:14}, (_,i) => { const d = new Date(today); d.setDate(d.getDate()+i); return d; }); };
+makeDates();
+let nowMin = () => { const n = new Date(); return n.getHours()*60 + n.getMinutes(); };
+
+// ocupados: chave "profissional|data|horario"
+let OCUP = new Set();
+const key = (p,d,h) => p+"|"+d+"|"+h;
+function demoData(){
+  let s = 7;
+  const rnd = () => (s = s*16807 % 2147483647) / 2147483647;
+  PROS.forEach(p => dates.forEach(d => blocosDe(d).forEach(h => { if (rnd() < .45) OCUP.add(key(p.id, iso(d), h)); })));
+}
+
+const st = { pro: PROS[0].id, svc: 0, day: 0, slot: null, ready: false };
+const firstOpen = () => Math.max(0, dates.findIndex((d,i) => !closed(d) && freeStarts(i).length));
+
+function status(dIdx, h){
+  const d = dates[dIdx], m = toMin(h);
+  if (OCUP.has(key(st.pro, iso(d), h))) return "Ocupado";
+  if (dIdx === 0 && m < nowMin() + ANTECEDENCIA) return "Encerrado";
+  return "Livre";
+}
+function freeStarts(dIdx){
+  const d = dates[dIdx];
+  if (!d || closed(d)) return [];
+  return blocosDe(d).filter(h => status(dIdx, h) === "Livre").map(toMin);
+}
+
+function renderPros(){
+  $("pros").innerHTML = PROS.map(p => `<button class="opt" type="button" data-p="${esc(p.id)}" aria-pressed="${p.id===st.pro}">${esc(p.nome)}<small>${esc(p.papel||"")}</small></button>`).join("");
+}
+function renderSvcs(){
+  $("svcs").innerHTML = SERVICOS.map((s,i) => `<button class="opt" type="button" data-s="${i}" aria-pressed="${i===st.svc}">${esc(s.nome)}<small>${esc(s.preco!=null&&s.preco!==""?"R$ "+s.preco+" · ":"")}1h30</small></button>`).join("");
+}
+function renderDays(){
+  $("days").innerHTML = dates.map((d,i) => {
+    const fx = closed(d), n = fx ? 0 : freeStarts(i).length;
+    return `<button class="day" type="button" data-d="${i}" aria-pressed="${i===st.day}" ${fx||!n?"disabled":""}><small>${i===0?"hoje":DIAS[d.getDay()]}</small><b>${d.getDate()}</b><i>${fx?"fechado":n?MESES[d.getMonth()]:"lotado"}</i></button>`;
+  }).join("");
+}
+function renderDay(){
+  const d = dates[st.day];
+  $("dayTitle").textContent = DIAS_LONGO[d.getDay()].replace(/^./, c => c.toUpperCase()) + ", " + d.getDate() + " de " + MESES[d.getMonth()];
+  if (!st.ready){ $("slots").innerHTML = `<div class="empty">Carregando a agenda…</div>`; return; }
+  const list = blocosDe(d), manha = list.filter(h => toMin(h) < 750), tarde = list.filter(h => toMin(h) >= 750);
+  const blk = h => { const m = toMin(h), x = status(st.day, h), ok = x === "Livre";
+    return `<button class="blk" type="button" data-t="${m}" aria-pressed="${m===st.slot}" ${ok?"":"disabled"}><b>${hm(m)} – ${hm(m+LEN)}</b><span>${m===st.slot?"Escolhido":x}</span></button>`; };
+  $("slots").innerHTML = (manha.length ? `<p class="per">Manhã</p><div class="grid">${manha.map(blk).join("")}</div>` : "")
+    + (tarde.length ? `<p class="per">Tarde</p><div class="grid">${tarde.map(blk).join("")}</div>` : "")
+    + (freeStarts(st.day).length ? "" : `<div class="empty">Este dia está lotado. Tente outro dia.</div>`);
+}
+const digits = v => v.replace(/\D/g,"").slice(0,11);
+const fmtTel = v => { const d = digits(v); if (d.length < 3) return d; const a = `(${d.slice(0,2)}) `, r = d.slice(2); return a + (r.length > 8 ? r.slice(0,5)+"-"+r.slice(5) : r.length > 4 ? r.slice(0,4)+"-"+r.slice(4) : r); };
+function summary(){
+  const d = dates[st.day], s = SERVICOS[st.svc], p = PROS.find(x => x.id === st.pro);
+  const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+LEN)}`;
+  return `<dt>Com</dt><dd>${esc(p.nome)}</dd><dt>Serviço</dt><dd>${esc(s.nome)}</dd><dt>Dia</dt><dd>${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}</dd><dt>Horário</dt><dd>${when}</dd>`;
+}
+function renderSum(){
+  const d = dates[st.day], s = SERVICOS[st.svc];
+  $("sum").innerHTML = summary();
+  $("err").hidden = true;
+  $("barText").textContent = st.slot === null ? "Escolha um horário" : `${s.nome} · ${DIAS[d.getDay()]} ${d.getDate()} · ${hm(st.slot)}`;
+}
+function all(){ renderPros(); renderSvcs(); renderDays(); renderDay(); renderSum(); }
+
+$("pros").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; st.pro = b.dataset.p; st.slot = null; all(); });
+$("svcs").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; st.svc = +b.dataset.s; renderSvcs(); renderSum(); });
+$("days").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b || b.disabled) return; st.day = +b.dataset.d; st.slot = null; all(); });
+$("slots").addEventListener("click", e => { const b = e.target.closest("[data-t]"); if (!b || b.disabled) return; st.slot = +b.dataset.t; renderDay(); renderSum(); });
+$("tel").addEventListener("input", e => { e.target.value = fmtTel(e.target.value); });
+const fail = t => { $("err").textContent = t; $("err").hidden = false; };
+
+// carregar agenda da planilha
+async function load(){
+  if (!API){ demoData(); st.ready = true; st.day = firstOpen(); const f = freeStarts(st.day); st.slot = f.length > 1 ? f[1] : f[0] ?? null; all(); return; }
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 10000);
+  try {
+    const r = await fetch(API, { signal: ctl.signal }); const j = await r.json();
+    clearTimeout(timer);
+    if (!j.ok) throw new Error(j.erro);
+    PROS = j.profissionais.map(p => ({ id: String(p.id), nome: String(p.nome), papel: String(p.funcao || "") }));
+    SERVICOS = j.servicos.map(s => ({ nome: String(s.nome), preco: s.preco }));
+    BLOCOS = {}; Object.keys(j.blocos).forEach(k => BLOCOS[k] = j.blocos[k].map(String));
+    LEN = +j.duracaoBloco || 90; ANTECEDENCIA = +j.antecedenciaMin || 30;
+    const [y,m,d] = String(j.hoje).split("-").map(Number); today = new Date(y, m-1, d); makeDates();
+    const base = +j.agoraMin, t0 = Date.now(); nowMin = () => base + Math.floor((Date.now()-t0)/60000);
+    OCUP = new Set(j.ocupados.map(o => key(o.p, o.d, o.h)));
+    if (!PROS.some(p => p.id === st.pro)) st.pro = PROS[0].id;
+    if (st.svc >= SERVICOS.length) st.svc = 0;
+    if (!st.ready){ st.day = firstOpen(); }
+    st.ready = true; all();
+  } catch (e) {
+    clearTimeout(timer);
+    $("slots").innerHTML = `<div class="empty">Não foi possível carregar a agenda agora. <button class="btn line" type="button" id="retry" style="margin-top:10px;width:100%;border-radius:12px">Tentar de novo</button></div>`;
+    $("retry").addEventListener("click", load);
+  }
+}
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!st.ready) return;
+  const nome = $("nome").value.trim(), tel = digits($("tel").value);
+  if (st.slot === null) return fail("Escolha um horário livre.");
+  if (nome.length < 2) { $("nome").focus(); return fail("Escreva seu nome."); }
+  if (tel.length < 10) { $("tel").focus(); return fail("Escreva um telefone com DDD."); }
+  const h = pad(Math.floor(st.slot/60))+":"+pad(st.slot%60), d = iso(dates[st.day]);
+  const pedido = { profissional: st.pro, servico: SERVICOS[st.svc].nome, data: d, horario: h, cliente: nome, telefone: tel, obs: $("obs").value.trim(), site: $("hp").value };
+  const done = () => {
+    OCUP.add(key(st.pro, d, h));
+    $("doneSum").innerHTML = summary() + `<dt>Nome</dt><dd>${esc(nome)}</dd>`;
+    $("formView").hidden = true; $("doneView").hidden = false;
+    st.slot = null; renderDays(); renderDay();
+  };
+  if (!API) return done();
+  const go = $("go"); go.disabled = true; go.textContent = "Confirmando…";
+  try {
+    const r = await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(pedido) });
+    const j = await r.json();
+    if (j.ok) done();
+    else { fail(String(j.erro || "Não foi possível agendar.")); if (j.ocupado){ st.slot = null; } load(); }
+  } catch { fail("Sem conexão com a agenda. Tente de novo."); }
+  go.disabled = false; go.textContent = "Confirmar agendamento";
+});
+$("again").addEventListener("click", () => { $("form").reset(); $("doneView").hidden = true; $("formView").hidden = false; const f = freeStarts(st.day); st.slot = f.length ? f[0] : null; all(); if (API) load(); });
+
+// barra do celular só aparece na área de agendamento
+const bo = new IntersectionObserver(es => es.forEach(x => $("bar").classList.toggle("on", x.isIntersecting)), { threshold: .05 });
+bo.observe($("agendamento"));
+
+if (API) $("demoNote").hidden = true;
+all();
+load();
+}
+</script>
+</body>
+</html>
