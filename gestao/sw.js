@@ -1,5 +1,5 @@
 // Service worker mínimo: permite instalar o app. Os dados sempre vêm da internet.
-const CACHE = 'mk-gestao-v1.0';
+const CACHE = 'mk-gestao-v1.0.1';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'index.html']))); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
