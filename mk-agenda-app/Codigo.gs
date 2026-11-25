@@ -68,9 +68,13 @@ function dados_(prof) {
   ag.linhas.forEach((r, i) => {
     if (!mesmaProf_(r[ag.col.Profissional], prof)) return;
     const data = normData_(r[ag.col.Data]);
-    if (!data || data < semana || data > fimJanela) return;
+    if (!data || data > fimJanela) return;
     const exec = String(r[ag.col['Execução']] || '').trim().toLowerCase();
     const status = String(r[ag.col.Status] || '').trim().toLowerCase();
+    if (data < semana) {
+      // semana anterior: só os que ficaram sem marcar (ex.: sábado esquecido), para ela ainda poder marcar
+      if (data < somaDias_(semana, -7) || exec || status === STATUS_CANCELADO) return;
+    }
     // cancelado sem ser "não feito" = desmarcado pela cliente/salão: não mostra
     if (status === STATUS_CANCELADO && exec !== EXEC_NAO_FEITO) return;
     const servico = String(r[ag.col['Serviço']] || '');

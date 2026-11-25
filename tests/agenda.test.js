@@ -98,3 +98,23 @@ test('códigos das manicures vêm das propriedades do script', () => {
   assert.deepEqual([r.ok, r.profissional.id, r.profissional.nome], [true, 'katia', 'Katia']);
   assert.equal(post(fns, { codigo: '', acao: 'login' }).ok, false);
 });
+
+test('semana anterior: atendimentos sem marcar aparecem e podem ser marcados; os já marcados e os mais antigos não', () => {
+  const g = fake({
+    Agenda: [CAB,
+      ['s1', '2026-11-21', '08:00', '09:30', 'Katia', 'Manicure', 'Ana', '', '', 'confirmado', '', ''],
+      ['s2', '2026-11-21', '09:30', '11:00', 'Katia', 'Manicure', 'Bia', '', '', 'confirmado', 'feito', 40],
+      ['s3', '2026-11-14', '08:00', '09:30', 'Katia', 'Manicure', 'Cris', '', '', 'confirmado', '', ''],
+      ['s4', '2026-11-21', '11:00', '12:30', 'Katia', 'Manicure', 'Dani', '', '', 'cancelado', '', '']],
+    Profissionais: [['ID', 'Nome'], ['katia', 'Katia']],
+    'Serviços': [['Serviço', 'Preço', 'Por unidade'], ['Manicure', 40, 'não']],
+    Bloqueios: [['Data', 'Profissional', 'Horário', 'Motivo']], 'Horários': [['terca', 'sim']]
+  }, { hoje: '2026-11-25', props: { CODIGO_katia: 'K' } });
+  const fns = carregar(['mk-agenda-app/Codigo.gs'], g);
+  let r = post(fns, { codigo: 'K', acao: 'dados' });
+  assert.deepEqual(JSON.parse(JSON.stringify(r.atendimentos.map(a => a.id))), ['s1']);
+  assert.equal(r.ganhosSemana, 0);
+  r = post(fns, { codigo: 'K', acao: 'marcar', linha: 2, id: 's1', execucao: 'feito', valorCheio: 50, pagamento: 'pix' });
+  assert.equal(r.ok, true);
+  assert.equal(r.atendimentos.length, 0);
+});

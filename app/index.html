@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MK Studio · Minha agenda</title>
-<!-- versão 1.3 -->
+<!-- versão 1.4 -->
 <meta name="theme-color" content="#19130f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -318,7 +318,7 @@ setInterval(() => { if (!document.hidden && codigo && dados) carregar(true); }, 
 
 function aplicar(r, animar) {
   dados = r;
-  if (!diaSel || diaSel < r.inicioSemana) diaSel = r.hoje;
+  if (!diaSel || (diaSel < r.inicioSemana && !r.atendimentos.some(a => a.data === diaSel))) diaSel = r.hoje;
   $('#nome').textContent = r.profissional.nome;
   atualizarGanhos(animar);
   desenharDias();
@@ -435,7 +435,9 @@ function desenharDias() {
   const abertos = new Set(dados.diasAbertos);
   const fim = somaDias(dados.hoje, 20);
   let html = '';
-  for (let d = dados.inicioSemana; d <= fim; d = somaDias(d, 1)) {
+  // começa na segunda desta semana, ou antes se sobrou atendimento sem marcar da semana passada
+  const inicio = dados.atendimentos.reduce((m, a) => (a.data < m ? a.data : m), dados.inicioSemana);
+  for (let d = inicio; d <= fim; d = somaDias(d, 1)) {
     const temAtend = atendDo(d).length > 0;
     if (!abertos.has(dow(d)) && !temAtend) continue;
     const [, m, dd] = d.split('-');
