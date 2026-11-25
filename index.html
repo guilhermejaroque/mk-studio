@@ -85,6 +85,7 @@ section.sec{padding-top:clamp(48px,7vw,88px);padding-bottom:clamp(40px,6vw,72px)
 .opt small{display:block;color:var(--soft);font-size:13px}
 .opt[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .svc{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.svc.solta .opt{grid-column:1/-1}
 .opt .pr{display:block;color:var(--soft);font-size:13px;white-space:nowrap}
 .opt .desc{display:block;color:var(--soft);font-size:13px;line-height:1.35;margin-top:4px}
 .opt.add{position:relative;padding-right:40px}
@@ -366,7 +367,7 @@ let SERVICOS = [
   { nome: "Remoção da esmaltação em gel", categoria: "Alongamento no molde F1", preco: 50 },
   { nome: "Blindagem", categoria: "Alongamento no molde F1", preco: 150 },
   { nome: "Banho de gel", categoria: "Alongamento no molde F1", preco: 150 },
-  { nome: "Decorações", categoria: "Decorações", tipo: "adicional", preco: 15, descricao: "Escolha na hora, na mesa: pó cromado, BabyBoomer, unhas encapsuladas, francesinha, películas ou pedrarias" }
+  { nome: "Decorações", tipo: "adicional", preco: 15, descricao: "Escolha na hora, na mesa: pó cromado, BabyBoomer, unhas encapsuladas, francesinha, películas ou pedrarias" }
 ];
 const normSvc = s => ({ nome: String(s.nome), categoria: String(s.categoria || ""), tipo: s.tipo === "adicional" ? "adicional" : "principal",
   preco: s.preco == null || s.preco === "" || isNaN(+s.preco) ? null : +s.preco, porUnidade: !!s.porUnidade, descricao: String(s.descricao || "") });
@@ -466,7 +467,8 @@ function renderSvcs(){
   const opt = s => { const i = SERVICOS.indexOf(s), add = s.tipo === "adicional", on = add ? st.add.has(s.nome) : s.nome === st.svc;
     const pr = s.preco == null ? "" : (add ? "+ " : "") + reais(s.preco) + (s.porUnidade ? " / unidade" : "");
     return `<button class="opt${add?" add":""}" type="button" data-n="${i}" aria-pressed="${on}">${esc(s.nome)}${pr?`<span class="pr">${esc(pr)}</span>`:""}${s.descricao?`<span class="desc">${esc(s.descricao)}</span>`:""}</button>`; };
-  const solo = SERVICOS.filter(s => !s.categoria);
+  const solo = SERVICOS.filter(s => !s.categoria && s.tipo !== "adicional");
+  const soltas = SERVICOS.filter(s => !s.categoria && s.tipo === "adicional");   // adicionais fora de grupo (ex.: Decorações)
   const cats = [...new Set(SERVICOS.filter(s => s.categoria).map(s => s.categoria))];
   const chev = `<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>`;
   $("svcs").innerHTML = (solo.length ? `<div class="svc">${solo.map(opt).join("")}</div>` : "") + cats.map(c => {
@@ -474,7 +476,7 @@ function renderSvcs(){
     const nSel = items.filter(s => st.add.has(s.nome)).length, cur = items.find(s => s.nome === st.svc);
     const sub = isAdd ? (items.length === 1 ? (nSel ? "Incluída" : "Opcional · + " + reais(items[0].preco || 0)) : nSel ? `${nSel} selecionada${nSel>1?"s":""}` : "Opcional · escolha quantas quiser") : (cur ? cur.nome : `${items.length} opções`);
     return `<div class="cat${open?" open":""}" data-box="${esc(c)}" data-add="${isAdd}"><button class="head" type="button" data-cat="${esc(c)}" aria-expanded="${open}"><span>${esc(c)}<small>${esc(sub)}</small></span>${chev}</button><div class="panel"><div><div class="svc">${items.map(opt).join("")}</div></div></div></div>`;
-  }).join("");
+  }).join("") + (soltas.length ? `<div class="svc solta" data-add="true" style="margin-top:10px">${soltas.map(opt).join("")}</div>` : "");
 }
 function dayLabel(i){
   const d = dates[i];
@@ -513,7 +515,7 @@ function summary(){
   const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+durAtual())}`;
   const itens = [s, ...ex].filter(Boolean), soma = itens.reduce((t,x) => t + (x.preco || 0), 0), aPartir = itens.some(x => x.porUnidade);
   const valor = itens.some(x => x.preco != null) ? (aPartir ? "a partir de " : "") + reais(soma) : "";
-  return `<dt>Com</dt><dd>${p ? esc(p.nome) : "escolha a profissional"}</dd><dt>Serviço</dt><dd>${s ? esc(s.nome) : "escolha o serviço"}</dd>${ex.length?`<dt>Decorações</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${d ? `${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}` : "escolha um dia"}</dd><dt>Horário</dt><dd>${when}</dd>`;
+  return `<dt>Com</dt><dd>${p ? esc(p.nome) : "escolha a profissional"}</dd><dt>Serviço</dt><dd>${s ? esc(s.nome) : "escolha o serviço"}</dd>${ex.length?`<dt>Adicional</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${d ? `${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}` : "escolha um dia"}</dd><dt>Horário</dt><dd>${when}</dd>`;
 }
 function renderSum(){
   const d = st.day === null ? null : dates[st.day], s = svc();
