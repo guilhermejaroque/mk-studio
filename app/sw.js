@@ -1,5 +1,5 @@
 // Service worker mínimo: permite instalar o app. Os dados sempre vêm da internet.
-const CACHE = 'mk-agenda-v1.2.1';
+const CACHE = 'mk-agenda-v1.3';
 self.addEventListener('install', e => { self.skipWaiting(); e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', 'index.html']))); });
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {

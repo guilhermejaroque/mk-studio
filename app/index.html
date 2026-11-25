@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MK Studio · Minha agenda</title>
-<!-- versão 1.2 -->
+<!-- versão 1.3 -->
 <meta name="theme-color" content="#19130f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -52,6 +52,9 @@
     padding:calc(env(safe-area-inset-top) + 14px) 20px 18px;border-radius:0 0 26px 26px;box-shadow:0 8px 24px rgba(25,19,15,.18)}
   .topline{display:flex;justify-content:space-between;align-items:center}
   .hello{font-size:15px;color:#b9ada1}
+  .views{display:flex;justify-content:center;gap:6px;margin:12px auto 2px;background:#2a221d;border-radius:999px;padding:4px;width:max-content}
+  .views button{min-width:118px;padding:10px 18px;border-radius:999px;color:#b9ada1;font-weight:600;font-size:15px}
+  .views button.sel{background:#f2ece4;color:var(--ink)}
   .hello b{color:#f2ece4;font-weight:500}
   .icon-btn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#2a221d;color:#e8dccd}
   .icon-btn svg{width:18px;height:18px}
@@ -190,9 +193,6 @@
     <div class="topline">
       <div class="hello">Olá, <b id="nome">—</b></div>
       <div style="display:flex;gap:8px">
-        <button class="icon-btn" id="btnEstoque" aria-label="Estoque">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
-        </button>
         <button class="icon-btn" id="btnAtualizar" aria-label="Atualizar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
         </button>
@@ -200,6 +200,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         </button>
       </div>
+    </div>
+    <div class="views" role="tablist">
+      <button type="button" data-v="agenda" class="sel" role="tab">Agenda</button>
+      <button type="button" data-v="estoque" role="tab">Estoque</button>
     </div>
     <div class="earn">
       <div class="lbl">Ganhos da semana</div>
@@ -324,9 +328,11 @@ function aplicar(r, animar) {
 /* ---------------- estoque ---------------- */
 let estoque = [];
 let filaEstoque = Promise.resolve();
-$('#btnEstoque').addEventListener('click', () => abrirEstoque());
+document.querySelectorAll('.views [data-v]').forEach(b => b.addEventListener('click', () => b.dataset.v === 'estoque' ? abrirEstoque() : fecharEstoque()));
+function marcaVista(v) { document.querySelectorAll('.views [data-v]').forEach(b => b.classList.toggle('sel', b.dataset.v === v)); }
 
 async function abrirEstoque() {
+  marcaVista('estoque');
   $('#dias').classList.add('hidden'); $('#lista').classList.add('hidden'); $('#estoque').classList.remove('hidden');
   window.scrollTo(0, 0);
   if (!estoque.length) $('#estoque').innerHTML = '<div class="empty">Carregando…</div>';
@@ -335,12 +341,13 @@ async function abrirEstoque() {
   estoque = r.estoque; desenharEstoque();
 }
 function fecharEstoque() {
+  marcaVista('agenda');
   $('#estoque').classList.add('hidden'); $('#dias').classList.remove('hidden'); $('#lista').classList.remove('hidden');
 }
 
 function desenharEstoque() {
   const baixos = estoque.filter(i => i.quantidade <= i.minimo);
-  let h = `<div class="est-top"><h2>Estoque</h2><button class="voltar" id="voltarAgenda">← Agenda</button></div>`;
+  let h = `<div class="est-top"><h2>Estoque</h2></div>`;
   h += baixos.length
     ? `<div class="comprar"><b>Comprar</b>${baixos.map(i => `<div>• ${esc(i.item)} (${i.quantidade} de mínimo ${i.minimo})</div>`).join('')}</div>`
     : `<div class="comprar vazio"><b>Comprar</b>Nada para comprar agora.</div>`;
@@ -352,7 +359,6 @@ function desenharEstoque() {
   });
   h += `<button class="add-item" id="novoItem">+ item</button>`;
   $('#estoque').innerHTML = h;
-  $('#voltarAgenda').onclick = fecharEstoque;
   $('#novoItem').onclick = () => abrirItem(null);
   document.querySelectorAll('#estoque [data-item]').forEach(el => el.onclick = () => abrirItem(estoque.find(i => i.id === el.dataset.item)));
   document.querySelectorAll('#estoque [data-mais],#estoque [data-menos]').forEach(el =>
@@ -533,21 +539,24 @@ function abrirFeito(a) {
   const pct = Math.round(dados.comissao * 100);
   abrirFolha(`<h3>Serviço feito</h3>
     <p>${esc(a.cliente)} · ${esc(a.servico)}</p>
-    <label style="font-size:14px;color:var(--soft)">Valor cobrado da cliente</label>
-    <div class="field"><span>R$</span><input id="valorCheio" inputmode="decimal" value="${reais(a.valorCheio)}"></div>
-    <div class="you">Você recebe (${pct}%): <b id="vcRecebe">R$ ${reais(a.ganho)}</b></div>
+    <label style="font-size:14px;color:var(--soft)">Quanto a cliente pagou de verdade?</label>
+    <div class="field"><span>R$</span><input id="valorCheio" inputmode="decimal" placeholder="${a.valorCheio ? 'no site: ' + reais(a.valorCheio) : '0,00'}"></div>
+    <div class="you">Você recebe (${pct}%): <b id="vcRecebe">R$ 0,00</b></div>
     <label style="font-size:14px;color:var(--soft)">Como a cliente pagou?</label>
     <div class="pays">${FORMAS.map(f => `<button class="pay${a.pagamento === f[0] ? ' sel' : ''}" data-pay="${f[0]}">${f[1]}</button>`).join('')}</div>
-    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-dark" id="okFeito"${a.pagamento ? '' : ' disabled'}>Confirmar</button></div>`);
+    <div class="btns"><button class="b-ghost" data-x>Cancelar</button><button class="b-dark" id="okFeito" disabled>Confirmar</button></div>`);
   let pagamento = a.pagamento || '';
   document.querySelectorAll('[data-pay]').forEach(b => b.onclick = () => {
     pagamento = b.dataset.pay;
     document.querySelectorAll('[data-pay]').forEach(x => x.classList.toggle('sel', x === b));
-    $('#okFeito').disabled = false;
+    pronto();
   });
   const inp = $('#valorCheio');
   const ler = () => Number(String(inp.value).replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')) || 0;
-  inp.oninput = () => { $('#vcRecebe').textContent = 'R$ ' + reais(ler() * dados.comissao); };
+  const pronto = () => { $('#okFeito').disabled = !(pagamento && ler() > 0); };
+  inp.oninput = () => { $('#vcRecebe').textContent = 'R$ ' + reais(ler() * dados.comissao); pronto(); };
+  pronto();
+  setTimeout(() => inp.focus(), 250);
   $('#okFeito').onclick = async ev => {
     ev.target.disabled = true; ev.target.textContent = 'Salvando…';
     const ok = await enviar('marcar', { linha: a.linha, id: a.id, execucao: 'feito', valorCheio: ler(), pagamento },

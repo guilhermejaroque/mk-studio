@@ -210,6 +210,8 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
       <linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#b98a7a"/><stop offset=".55" stop-color="#d8b0a2"/><stop offset="1" stop-color="#9c6f61"/></linearGradient>
       <linearGradient id="glass2" x1="0" x2="1"><stop offset="0" stop-color="#5e2a2c"/><stop offset=".55" stop-color="#8a3e40"/><stop offset="1" stop-color="#4a1f22"/></linearGradient>
       <linearGradient id="cap" x1="0" x2="1"><stop offset="0" stop-color="#1b1411"/><stop offset=".5" stop-color="#3a2e28"/><stop offset="1" stop-color="#140f0d"/></linearGradient>
+      <linearGradient id="steel" x1="0" x2="1"><stop offset="0" stop-color="#7d7a78"/><stop offset=".45" stop-color="#ecebe8"/><stop offset="1" stop-color="#8f8b88"/></linearGradient>
+      <linearGradient id="steel2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e7e3"/><stop offset="1" stop-color="#8a8682"/></linearGradient>
       <linearGradient id="table" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3d6c6"/><stop offset="1" stop-color="#d6c5b1"/></linearGradient>
     </defs><rect width="100%" height="100%" fill="url(#mono)"/></svg>
   <div class="hwrap">
@@ -223,18 +225,33 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
     <svg class="still" viewBox="0 0 440 326" aria-hidden="true">
       <g transform="translate(80 -200)">
       <ellipse cx="150" cy="510" rx="190" ry="16" fill="#5a4232" opacity=".14"/>
-      <!-- frasco alto -->
-      <rect x="70" y="210" width="34" height="96" fill="url(#cap)"/>
-      <rect x="64" y="300" width="46" height="14" fill="#2b221d"/>
-      <path d="M40 330q0-16 16-16h62q16 0 16 16v160q0 14-14 14H54q-14 0-14-14z" fill="url(#glass)"/>
-      <path d="M52 336v150" stroke="#fff" stroke-opacity=".55" stroke-width="5" stroke-linecap="round"/>
+      <!-- alicate de cutícula -->
+      <g transform="rotate(-8 95 360)">
+        <path d="M91 312C76 382 60 440 54 498" fill="none" stroke="url(#steel)" stroke-width="15" stroke-linecap="round"/>
+        <path d="M99 312C114 382 130 440 136 498" fill="none" stroke="url(#steel)" stroke-width="15" stroke-linecap="round"/>
+        <path d="M84 350q11 34 22 0" fill="none" stroke="#a9a5a1" stroke-width="2.5"/>
+        <path d="M86 356q9 26 18 0" fill="none" stroke="#a9a5a1" stroke-width="2.5"/>
+        <path d="M86 304C78 276 82 246 94 224l4 2C92 250 92 278 96 304z" fill="url(#steel2)"/>
+        <path d="M104 304C112 276 108 246 96 224l-4 2C98 250 98 278 94 304z" fill="url(#steel)"/>
+        <circle cx="95" cy="308" r="11" fill="url(#steel)"/>
+        <circle cx="95" cy="308" r="4" fill="#6f6b68"/>
+        <path d="M60 470l-3 24M130 470l3 24" stroke="#fff" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+      </g>
+      <!-- espátula de cutícula -->
+      <g transform="rotate(-4 60 474)">
+        <rect x="-26" y="471" width="168" height="5" rx="2.5" fill="url(#steel2)"/>
+        <rect x="30" y="468" width="56" height="11" rx="4" fill="url(#steel2)"/>
+        <path d="M36 468v11M44 468v11M52 468v11M60 468v11M68 468v11M76 468v11" stroke="#8a8682" stroke-width="1.5"/>
+        <path d="M-26 469c-12-1-18 3-18 4.5s6 5.5 18 4.5z" fill="url(#steel2)"/>
+        <path d="M142 471l16 2.5-16 2.5z" fill="#8a8682"/>
+      </g>
       <!-- frasco baixo -->
       <rect x="196" y="318" width="30" height="74" fill="url(#cap)"/>
       <rect x="190" y="388" width="42" height="12" fill="#2b221d"/>
       <path d="M168 414q0-14 14-14h58q14 0 14 14v78q0 12-12 12h-62q-12 0-12-12z" fill="url(#glass2)"/>
       <path d="M180 420v70" stroke="#fff" stroke-opacity=".4" stroke-width="4" stroke-linecap="round"/>
       <!-- lixa -->
-      <rect x="-60" y="486" width="180" height="12" rx="6" fill="#c9a98c" transform="rotate(-6 30 492)"/>
+      <rect x="-60" y="490" width="180" height="12" rx="6" fill="#c9a98c" transform="rotate(-6 30 496)"/>
       <!-- pétalas -->
       <g fill="#b98a7a" opacity=".75"><ellipse cx="300" cy="496" rx="18" ry="7" transform="rotate(20 300 496)"/><ellipse cx="330" cy="500" rx="14" ry="6" transform="rotate(-25 330 500)"/></g>
     </g>
@@ -343,18 +360,13 @@ let SERVICOS = [
   { nome: "Plástica dos pés", preco: 60 },
   { nome: "Esmaltação tradicional", preco: 17.5 },
   { nome: "Esmaltação tradicional pé", preco: 20 },
-  { nome: "Primeira aplicação + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 230 },
-  { nome: "Manutenção + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 140, descricao: "Recomendado a cada 14 ou 21 dias" },
+  { nome: "Primeira aplicação + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 230, descricao: "Já incluso cutilagem" },
+  { nome: "Manutenção + esmaltação em gel", categoria: "Alongamento no molde F1", preco: 140, descricao: "Já incluso cutilagem · Recomendado a cada 14 ou 21 dias" },
   { nome: "Manutenção por unha quebrada", categoria: "Alongamento no molde F1", preco: 10, porUnidade: true, descricao: "Valor unitário por unha quebrada antes do período de manutenção" },
   { nome: "Remoção da esmaltação em gel", categoria: "Alongamento no molde F1", preco: 50 },
   { nome: "Blindagem", categoria: "Alongamento no molde F1", preco: 150 },
   { nome: "Banho de gel", categoria: "Alongamento no molde F1", preco: 150 },
-  { nome: "Pó cromado", categoria: "Decorações", tipo: "adicional", preco: 10 },
-  { nome: "BabyBoomer", categoria: "Decorações", tipo: "adicional", preco: 20 },
-  { nome: "Unhas encapsuladas", categoria: "Decorações", tipo: "adicional", preco: 10, porUnidade: true },
-  { nome: "Francesinha", categoria: "Decorações", tipo: "adicional", preco: 10 },
-  { nome: "Películas", categoria: "Decorações", tipo: "adicional", preco: 5 },
-  { nome: "Pedrarias", categoria: "Decorações", tipo: "adicional", preco: 5 }
+  { nome: "Decorações", categoria: "Decorações", tipo: "adicional", preco: 15, descricao: "Escolha na hora, na mesa: pó cromado, BabyBoomer, unhas encapsuladas, francesinha, películas ou pedrarias" }
 ];
 const normSvc = s => ({ nome: String(s.nome), categoria: String(s.categoria || ""), tipo: s.tipo === "adicional" ? "adicional" : "principal",
   preco: s.preco == null || s.preco === "" || isNaN(+s.preco) ? null : +s.preco, porUnidade: !!s.porUnidade, descricao: String(s.descricao || "") });
@@ -451,7 +463,7 @@ function renderPros(){
 }
 function renderSvcs(){
   const opt = s => { const i = SERVICOS.indexOf(s), add = s.tipo === "adicional", on = add ? st.add.has(s.nome) : s.nome === st.svc;
-    const pr = s.preco == null ? "" : reais(s.preco) + (s.porUnidade ? " / unidade" : "");
+    const pr = s.preco == null ? "" : (add ? "+ " : "") + reais(s.preco) + (s.porUnidade ? " / unidade" : "");
     return `<button class="opt${add?" add":""}" type="button" data-n="${i}" aria-pressed="${on}">${esc(s.nome)}${pr?`<span class="pr">${esc(pr)}</span>`:""}${s.descricao?`<span class="desc">${esc(s.descricao)}</span>`:""}</button>`; };
   const solo = SERVICOS.filter(s => !s.categoria);
   const cats = [...new Set(SERVICOS.filter(s => s.categoria).map(s => s.categoria))];
@@ -459,7 +471,7 @@ function renderSvcs(){
   $("svcs").innerHTML = (solo.length ? `<div class="svc">${solo.map(opt).join("")}</div>` : "") + cats.map(c => {
     const items = SERVICOS.filter(s => s.categoria === c), isAdd = items.every(s => s.tipo === "adicional"), open = st.open.has(c);
     const nSel = items.filter(s => st.add.has(s.nome)).length, cur = items.find(s => s.nome === st.svc);
-    const sub = isAdd ? (nSel ? `${nSel} selecionada${nSel>1?"s":""}` : "Opcional · escolha quantas quiser") : (cur ? cur.nome : `${items.length} opções`);
+    const sub = isAdd ? (items.length === 1 ? (nSel ? "Incluída" : "Opcional · + " + reais(items[0].preco || 0)) : nSel ? `${nSel} selecionada${nSel>1?"s":""}` : "Opcional · escolha quantas quiser") : (cur ? cur.nome : `${items.length} opções`);
     return `<div class="cat${open?" open":""}" data-box="${esc(c)}" data-add="${isAdd}"><button class="head" type="button" data-cat="${esc(c)}" aria-expanded="${open}"><span>${esc(c)}<small>${esc(sub)}</small></span>${chev}</button><div class="panel"><div><div class="svc">${items.map(opt).join("")}</div></div></div></div>`;
   }).join("");
 }
