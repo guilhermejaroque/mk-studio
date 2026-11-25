@@ -46,3 +46,16 @@ Para trocar um código, mude o valor da propriedade em **Configurações do proj
 ## Quando tiver as taxas da maquininha
 
 No app, toque na engrenagem (⚙︎) → **Taxas da maquininha**, digite as porcentagens e toque em **Salvar taxas**. As contas de todos os meses se ajustam sozinhas.
+
+## 4. Servidor do site de agendamento
+
+O código fica em `site-agenda/Codigo.gs`. É o script preso à planilha: abra a planilha e vá em **Extensões → Apps Script**.
+
+1. Substitua todo o conteúdo do arquivo pelo de `site-agenda/Codigo.gs` e salve.
+2. **Implantar → Gerenciar implantações** → lápis → **Versão: Nova versão** → **Implantar**. O endereço não muda.
+
+Horários diferentes por profissional ficam na aba **Profissionais**:
+- **Blocos (se diferentes)**: lista de horários de início, separados por vírgula.
+- **Duração (min)**: duração de cada atendimento.
+
+Deixe em branco para usar os horários da aba Horários (blocos de 1h30).

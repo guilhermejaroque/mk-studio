@@ -29,6 +29,8 @@
     };
     return {
       getValues: () => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => cel(r - 1 + i, c - 1 + j))),
+      getDisplayValues: () => Array.from({ length: nr }, (_, i) => Array.from({ length: nc }, (_, j) => { const v = cel(r - 1 + i, c - 1 + j); return v instanceof Date ? ('0' + v.getUTCDate()).slice(-2) + '/' + ('0' + (v.getUTCMonth() + 1)).slice(-2) + '/' + v.getUTCFullYear() : String(v).replace(/^'/, ''); })),
+      setNumberFormat: function () { return this; },
       getValue: () => cel(r - 1, c - 1),
       setValue: v => set(r, c, v),
       setValues: vs => vs.forEach((linha, i) => linha.forEach((v, j) => set(r + i, c + j, v)))
@@ -47,6 +49,11 @@
     Object.keys(abas).forEach(n => { planilha.abas[n] = aba(n, abas[n]); });
     let uid = 0;
     const hoje = opcoes.hoje || hojeLocal();
+    const planilhaObj = {
+      getSheetByName: n => planilha.abas[n] || null,
+      insertSheet: n => (planilha.abas[n] = aba(n, [])),
+      getSpreadsheetTimeZone: () => 'America/Sao_Paulo', setSpreadsheetTimeZone: () => {}
+    };
     const DataReal = Date;
     function DataFalsa() {
       if (!arguments.length) { const d = new DataReal(hoje + 'T15:00:00Z'); d.__hoje = true; return d; }
@@ -58,10 +65,8 @@
     return {
       _planilha: planilha,
       SpreadsheetApp: {
-        openById: () => ({
-          getSheetByName: n => planilha.abas[n] || null,
-          insertSheet: n => (planilha.abas[n] = aba(n, []))
-        }),
+        openById: () => planilhaObj,
+        getActiveSpreadsheet: () => planilhaObj,
         flush: () => {}
       },
       PropertiesService: {
@@ -77,8 +82,9 @@
       },
       Utilities: {
         getUuid: () => 'id' + (++uid),
+        parseDate: (t) => new DataReal(t.replace(' ', 'T') + ':00Z'),
         formatDate: (d, fuso, fmt) => {
-          if (d && d.__hoje) return fmt === 'yyyy-MM-dd' ? hoje : '12:00';
+          if (d && d.__hoje) return fmt === 'yyyy-MM-dd' ? hoje : fmt === 'H' ? '12' : fmt === 'm' ? '0' : fmt === 'HH:mm' ? '12:00' : hoje.replace(/-/g, '').slice(2) + '120000';
           const iso = d.toISOString();
           return fmt === 'yyyy-MM-dd' ? iso.slice(0, 10) : iso.slice(11, 16);
         }

@@ -349,10 +349,10 @@ footer .word{display:block;color:var(--ink);margin-bottom:6px;font-size:18px}
 const API_URL = "https://script.google.com/macros/s/AKfycbwagXyrU96_SA3gFaE8f4S0eOrGzvX8gRDASyAwyDpay_0E7kaLvij_sKg2KZeX3bsbZQ/exec";
 // Na prévia do Claude a página não pode falar com o Google, então ela usa dados de exemplo.
 const API = /claude|anthropic/.test(location.hostname) ? "" : API_URL;
-let LEN = 90; // cada bloco tem 1h30
+let LEN = 90; // duração padrão do bloco (cada profissional pode ter a sua)
 let PROS = [
   { id: "katia", nome: "Katia", papel: "Manicure", extras: ["19:30"] },
-  { id: "suenia", nome: "Suênia", papel: "Manicure", extras: [] }
+  { id: "suenia", nome: "Suênia", papel: "Manicure", extras: [], blocos: ["08:00","09:00","10:00","11:00","13:30","14:30","15:30","16:30"], duracao: 60 }
 ];
 let SERVICOS = [
   { nome: "Manicure tradicional", preco: 35 },
@@ -382,7 +382,8 @@ const FOTOS = [
   { t: "Esmaltação", c: "Azul royal", f: "azul" }
 ];
 const proAtual = () => PROS.find(p => p.id === st.pro) || null;
-const blocosDe = d => { const dia = BLOCOS[d.getDay()] || []; return dia.length ? dia.concat(((proAtual() || {}).extras || []).filter(h => !dia.includes(h))) : []; };
+const blocosDe = d => { const dia = BLOCOS[d.getDay()] || [], p = proAtual() || {}; if (!dia.length) return []; const base = p.blocos || dia; return base.concat((p.extras || []).filter(h => !base.includes(h))); };
+const durAtual = () => (proAtual() || {}).duracao || LEN;
 const closed = d => !blocosDe(d).length;
 const DIAS = ["dom","seg","ter","qua","qui","sex","sáb"];
 const DIAS_LONGO = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
@@ -424,7 +425,7 @@ function demoData(){
   let s = 7;
   const rnd = () => (s = s*16807 % 2147483647) / 2147483647;
   const t = dates.filter(d => !closed(d))[3]; if (t) FOLGA.set("suenia|" + iso(t), "folga");
-  PROS.forEach(p => dates.forEach(d => (BLOCOS[d.getDay()] || []).concat(BLOCOS[d.getDay()]?.length ? p.extras || [] : []).forEach(h => { if (rnd() < .45) OCUP.add(key(p.id, iso(d), h)); })));
+  PROS.forEach(p => dates.forEach(d => (BLOCOS[d.getDay()]?.length ? (p.blocos || BLOCOS[d.getDay()]).concat(p.extras || []) : []).forEach(h => { if (rnd() < .45) OCUP.add(key(p.id, iso(d), h)); })));
 }
 
 const st = { pro: null, svc: null, add: new Set(), open: new Set(), day: null, slot: null, ready: false };
@@ -499,7 +500,7 @@ function renderDay(){
   if (f){ $("slots").innerHTML = `<div class="empty">${f === "folga" ? `${esc(p.nome)} está de folga neste dia.` : "O salão estará fechado neste dia."} Escolha outro dia.</div>`; return; }
   const list = blocosDe(d), manha = list.filter(h => toMin(h) < 750), tarde = list.filter(h => toMin(h) >= 750 && toMin(h) < 1170), noite = list.filter(h => toMin(h) >= 1170);
   const blk = h => { const m = toMin(h), x = status(st.day, h), ok = x === "Livre";
-    return `<button class="blk" type="button" data-t="${m}" aria-pressed="${m===st.slot}" ${ok?"":"disabled"}><b>${hm(m)} – ${hm(m+LEN)}</b><span>${m===st.slot?"Escolhido":x}</span></button>`; };
+    return `<button class="blk" type="button" data-t="${m}" aria-pressed="${m===st.slot}" ${ok?"":"disabled"}><b>${hm(m)} – ${hm(m+durAtual())}</b><span>${m===st.slot?"Escolhido":x}</span></button>`; };
   $("slots").innerHTML = (manha.length ? `<p class="per">Manhã</p><div class="grid">${manha.map(blk).join("")}</div>` : "")
     + (tarde.length ? `<p class="per">Tarde</p><div class="grid">${tarde.map(blk).join("")}</div>` : "")
     + (noite.length ? `<p class="per">Noite</p><div class="grid">${noite.map(blk).join("")}</div>` : "")
@@ -509,7 +510,7 @@ const digits = v => v.replace(/\D/g,"").slice(0,11);
 const fmtTel = v => { const d = digits(v); if (d.length < 3) return d; const a = `(${d.slice(0,2)}) `, r = d.slice(2); return a + (r.length > 8 ? r.slice(0,5)+"-"+r.slice(5) : r.length > 4 ? r.slice(0,4)+"-"+r.slice(4) : r); };
 function summary(){
   const d = st.day === null ? null : dates[st.day], s = svc(), ex = extrasSel(), p = proAtual();
-  const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+LEN)}`;
+  const when = st.slot === null ? "escolha um horário" : `${hm(st.slot)} às ${hm(st.slot+durAtual())}`;
   const itens = [s, ...ex].filter(Boolean), soma = itens.reduce((t,x) => t + (x.preco || 0), 0), aPartir = itens.some(x => x.porUnidade);
   const valor = itens.some(x => x.preco != null) ? (aPartir ? "a partir de " : "") + reais(soma) : "";
   return `<dt>Com</dt><dd>${p ? esc(p.nome) : "escolha a profissional"}</dd><dt>Serviço</dt><dd>${s ? esc(s.nome) : "escolha o serviço"}</dd>${ex.length?`<dt>Decorações</dt><dd>${esc(ex.map(x=>x.nome).join(", "))}</dd>`:""}${valor?`<dt>Valor</dt><dd>${esc(valor)}</dd>`:""}<dt>Dia</dt><dd>${d ? `${DIAS[d.getDay()]}, ${d.getDate()} ${MESES[d.getMonth()]}` : "escolha um dia"}</dd><dt>Horário</dt><dd>${when}</dd>`;
@@ -561,7 +562,7 @@ async function load(){
     const r = await fetch(API, { signal: ctl.signal }); const j = await r.json();
     clearTimeout(timer);
     if (!j.ok) throw new Error(j.erro);
-    PROS = j.profissionais.map(p => ({ id: String(p.id), nome: String(p.nome), papel: String(p.funcao || ""), extras: (p.extras || []).map(String) }));
+    PROS = j.profissionais.map(p => ({ id: String(p.id), nome: String(p.nome), papel: String(p.funcao || ""), extras: (p.extras || []).map(String), blocos: Array.isArray(p.blocos) && p.blocos.length ? p.blocos.map(String) : null, duracao: +p.duracao || 0 }));
     SERVICOS = j.servicos.map(normSvc);
     BLOCOS = {}; Object.keys(j.blocos).forEach(k => BLOCOS[k] = j.blocos[k].map(String));
     LEN = +j.duracaoBloco || 90; NDIAS = (+j.diasAFrente || 30) + 1; ANTECEDENCIA = +j.antecedenciaMin || 30;
